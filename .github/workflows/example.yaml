@@ -1,9 +1,7 @@
 name: Mirror Git
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   mirror-main:
@@ -21,12 +19,12 @@ jobs:
         with:
           source_protocol: https
           source_host: github.com
-          source_username: k8scat
-          source_token: xxx
-          dest_protocol: https
+          source_username: ${{ secrets.SOURCE_USERNAME }}
+          source_token: ${{ secrets.SOURCE_TOKEN }}
+          dest_protocol: ssh
           dest_host: github.com
-          dest_username: another_user
-          dest_token: xxx
+          dest_username: ${{ secrets.DEST_USERNAME }}
+          dest_private_key: ${{ secrets.DEST_PRIVATE_KEY }}
           enable_git_lfs: "true"
           push_tags: "true"
           dest_create_repo_script: |
