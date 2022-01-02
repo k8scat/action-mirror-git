@@ -15,7 +15,7 @@ jobs:
           echo "::set-output name=repo_list::repo1,repo2"
 
       - name: action-git-mirror
-        uses: k8scat/action-git-mirror@v0.0.2
+        uses: k8scat/action-git-mirror@v0.0.3
         with:
           source_protocol: https
           source_host: github.com

@@ -48,7 +48,7 @@ for repo_name in ${MIRROR_REPO_LIST}; do
   if [[ "${SOURCE_PROTOCOL}" = "ssh" ]]; then
     source_addr="git@${SOURCE_HOST}:${SOURCE_USERNAME}/${repo_name}.git"
   elif [[ "${SOURCE_PROTOCOL}" = "https" ]]; then
-    source_addr="https://${SOURCE_SECRET}@${SOURCE_HOST}"
+    source_addr="https://${SOURCE_TOKEN}@${SOURCE_HOST}"
     if [[ -n "${SOURCE_PORT}" ]]; then
       source_addr="${source_addr}:${SOURCE_PORT}"
     fi
@@ -77,7 +77,13 @@ for repo_name in ${MIRROR_REPO_LIST}; do
 
   export REPO_NAME=$repo_name
   if [[ -n "${DEST_CREATE_REPO_SCRIPT}" ]]; then
-    eval "${DEST_CREATE_REPO_SCRIPT}"
+    if [[ $(echo "${DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${DEST_CREATE_REPO_SCRIPT}" =~ http*://* ]]; then
+      curl -L "${DEST_CREATE_REPO_SCRIPT}" -o /tmp/create_repo
+    else
+      echo "${DEST_CREATE_REPO_SCRIPT}" > /tmp/create_repo
+    fi
+    chmod +x /tmp/create_repo
+    /tmp/create_repo
   fi
 
   repo_dir="${WORKDIR}/${repo_name}"
