@@ -9,14 +9,34 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Check tools
+        run: |
+          gh --version
+          git --version
+
+      - name: Login Source GitHub
+        run: |
+          source functions/gh
+          gh_login "${{ secrets.SOURCE_TOKEN }}"
+          gh auth status
+
       - name: List repos
         id: list_repos
         run: |
-
-          echo "::set-output name=repo_list::repo1,repo2"
+          gh repo list ${{ secrets.SOURCE_USERNAME }} -L 1000 > /tmp/repos.txt
+          cat /tmp/repos.txt | while read -r repo; do
+            repo_name=$(echo ${repo} | awk '{print $1}' | awk -F/ '{print $2}')
+            if [[ -f "/tmp/repo_list.txt" ]]; then
+              echo -n ",${repo_name}" >> /tmp/repo_list.txt
+            else
+              echo -n "${repo_name}" >> /tmp/repo_list.txt
+            fi
+          done
+          repo_list=$(cat /tmp/repo_list.txt)
+          echo "::set-output name=repo_list::${repo_list}"
 
       - name: action-git-mirror
-        uses: k8scat/action-git-mirror@v0.0.5
+        uses: k8scat/action-git-mirror@v0.0.6
         with:
           source_protocol: https
           source_host: github.com
@@ -28,10 +48,13 @@ jobs:
           dest_private_key: ${{ secrets.DEST_PRIVATE_KEY }}
           enable_git_lfs: "true"
           push_tags: "true"
-          mirror_repo_list: ${{ steps.list_repos.outputs.repo_list }}
+          mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
+          skip_tags_repos: "repo3,repo4"
+          ignore_repos: "repo5,repo6"
           dest_create_repo_script: |
             # create repo via github cli
             echo "${DEST_TOKEN}" > ~/.github_token
             gh auth login --with-token < ~/.github_token
             gh auth status
-            gh repo create "${DEST_USERNAME}/${REPO_NAME}" --private -y
+            gh repo create "${DEST_USERNAME}/${REPO_NAME}" --private
+            rm -f ~/.github_token
