@@ -4,7 +4,7 @@ Synchronize git repositories like a mirror.
 
 ## Example
 
-[workflows/example.yaml](./.github/workflows/example.yaml)
+[workflows/example.yml](./.github/workflows/example.yml)
 
 ## Base Image
 
