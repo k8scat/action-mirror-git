@@ -1,0 +1,84 @@
+# Creating a Docker container action https://docs.github.com/en/actions/creating-actions/creating-a-docker-container-action
+# Metadata syntax for GitHub Actions https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions
+
+name: "Mirror Git"
+branding:
+  icon: "copy"
+  color: "green"
+author: "K8sCat <k8scat@gmail.com>"
+description: "Synchronize git repositories like a mirror."
+inputs:
+  source_protocol:
+    description: "https or ssh"
+    require: true
+    default: "https"
+  source_host:
+    description: "Git host without the protocol"
+    required: true
+    default: "github.com"
+  source_port:
+    description: "Git port"
+    required: false
+  source_username:
+    description: "Username on source git server"
+    required: true
+  source_private_key:
+    description: "SSH private key"
+    required: false
+  source_token:
+    description: "Personal access token"
+    required: false
+  dest_protocol:
+    description: "https or ssh"
+    require: true
+    default: "https"
+  dest_host:
+    description: "Git host without the protocol"
+    required: true
+    default: "github.com"
+  dest_port:
+    description: "Git port"
+    required: false
+  dest_username:
+    description: "Username on dest git server"
+    required: true
+  dest_private_key:
+    description: "SSH private key"
+    required: false
+  dest_token:
+    description: "Personal access token"
+    required: false
+  dest_create_repo_script:
+    description: "Script used to create repo on dest git server"
+    required: false
+  mirror_repo_list:
+    description: "Repository list seperated by comma"
+    required: true
+  enable_git_lfs:
+    description: "use git lfs, true or false"
+    required: false
+    default: "false"
+  push_tags:
+    description: "push tags via --mirror, true or false"
+    required: false
+    default: "true"
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  env:
+    SOURCE_PROTOCOL: ${{ inputs.source_protocol }}
+    SOURCE_HOST: ${{ inputs.source_host }}
+    SOURCE_PORT: ${{ inputs.source_port }}
+    SOURCE_USERNAME: ${{ inputs.source_username }}
+    SOURCE_PRIVATE_KEY: ${{ inputs.source_private_key }}
+    SOURCE_TOKEN: ${{ inputs.source_token }}
+    DEST_PROTOCOL: ${{ inputs.dest_protocol }}
+    DEST_HOST: ${{ inputs.dest_host }}
+    DEST_PORT: ${{ inputs.dest_port }}
+    DEST_USERNAME: ${{ inputs.dest_username }}
+    DES_PRIVATE_KEY: ${{ inputs.dest_private_key }}
+    DEST_TOKEN: ${{ inputs.dest_token }}
+    DEST_CREATE_REPO_SCRIPT: ${{ inputs.dest_create_repo_script }}
+    MIRROR_REPO_LIST: ${{ inputs.mirror_repo_list }}
+    ENABLE_GIT_LFS: ${{ inputs.enable_git_lfs }}
+    PUSH_TAGS: ${{ inputs.push_tags }}
