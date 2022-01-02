@@ -76,7 +76,7 @@ runs:
     DEST_HOST: ${{ inputs.dest_host }}
     DEST_PORT: ${{ inputs.dest_port }}
     DEST_USERNAME: ${{ inputs.dest_username }}
-    DES_PRIVATE_KEY: ${{ inputs.dest_private_key }}
+    DEST_PRIVATE_KEY: ${{ inputs.dest_private_key }}
     DEST_TOKEN: ${{ inputs.dest_token }}
     DEST_CREATE_REPO_SCRIPT: ${{ inputs.dest_create_repo_script }}
     MIRROR_REPO_LIST: ${{ inputs.mirror_repo_list }}
