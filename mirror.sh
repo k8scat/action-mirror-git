@@ -42,7 +42,11 @@ if [[ "${DEST_PROTOCOL}" = "ssh" ]]; then
 fi
 
 IFS=","
-for repo_name in ${MIRROR_REPO_LIST}; do
+for repo_name in ${MIRROR_REPOS}; do
+  if [[ "${IGNORE_REPOS}" =~ "${repo_name}" ]]; then
+    continue
+  fi
+
   cd ${WORKDIR} || exit 1
 
   if [[ "${SOURCE_PROTOCOL}" = "ssh" ]]; then
@@ -88,12 +92,12 @@ for repo_name in ${MIRROR_REPO_LIST}; do
 
   repo_dir="${WORKDIR}/${repo_name}"
   cd "${repo_dir}" || exit 1
-  if [[ "${PUSH_TAGS}" = "true" ]]; then
-    git push --mirror -f "${dest_addr}" || true
+  if [[ "${PUSH_TAGS}" = "false" || "${SKIP_TAGS_REPOS}" =~ "${repo_name}" ]]; then
+    git push --all -f "${dest_addr}" || continue
   else
-    git push --all -f "${dest_addr}" || true
+    git push --mirror -f "${dest_addr}" || continue
   fi
   if [[ "${ENABLE_GIT_LFS}" = "true" ]]; then
-    git lfs push --all "${dest_addr}" || true
+    git lfs push --all "${dest_addr}" || continue
   fi
 done

@@ -12,10 +12,11 @@ jobs:
       - name: List repos
         id: list_repos
         run: |
+
           echo "::set-output name=repo_list::repo1,repo2"
 
       - name: action-git-mirror
-        uses: k8scat/action-git-mirror@v0.0.4
+        uses: k8scat/action-git-mirror@v0.0.5
         with:
           source_protocol: https
           source_host: github.com
@@ -27,9 +28,10 @@ jobs:
           dest_private_key: ${{ secrets.DEST_PRIVATE_KEY }}
           enable_git_lfs: "true"
           push_tags: "true"
+          mirror_repo_list: ${{ steps.list_repos.outputs.repo_list }}
           dest_create_repo_script: |
             # create repo via github cli
-            echo "${dest_token}" > ~/.github_token
+            echo "${DEST_TOKEN}" > ~/.github_token
             gh auth login --with-token < ~/.github_token
+            gh auth status
             gh repo create "${DEST_USERNAME}/${REPO_NAME}" --private -y
-          mirror_repo_list: ${{ steps.list_repos.outputs.repo_list }}

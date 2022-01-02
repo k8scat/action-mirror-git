@@ -51,17 +51,23 @@ inputs:
   dest_create_repo_script:
     description: "Script used to create repo on dest git server"
     required: false
-  mirror_repo_list:
-    description: "Repository list seperated by comma"
+  mirror_repos:
+    description: "Repos to mirror, separated by comma"
     required: true
   enable_git_lfs:
     description: "use git lfs, true or false"
     required: false
     default: "false"
   push_tags:
-    description: "push tags via --mirror, true or false"
+    description: "Push tags via --mirror, true or false"
     required: false
     default: "true"
+  skip_tags_repos:
+    description: "Skip pushing tags for these repos, seperated by comma"
+    required: false
+  ignored_repos:
+    description: "Ignore these repos, seperated by comma"
+    required: false
 runs:
   using: "docker"
   image: "Dockerfile"
@@ -79,6 +85,8 @@ runs:
     DEST_PRIVATE_KEY: ${{ inputs.dest_private_key }}
     DEST_TOKEN: ${{ inputs.dest_token }}
     DEST_CREATE_REPO_SCRIPT: ${{ inputs.dest_create_repo_script }}
-    MIRROR_REPO_LIST: ${{ inputs.mirror_repo_list }}
+    MIRROR_REPOS: ${{ inputs.mirror_repos }}
     ENABLE_GIT_LFS: ${{ inputs.enable_git_lfs }}
     PUSH_TAGS: ${{ inputs.push_tags }}
+    SKIP_TAGS_REPOS: ${{ inputs.skip_tags_repos }}
+    IGNORED_REPOS: ${{ inputs.ignored_repos }}
