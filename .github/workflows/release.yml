@@ -20,8 +20,7 @@ jobs:
         run: echo "::set-output name=version::${GITHUB_REF/refs\/tags\/v/}"
 
       - name: Build mirror-git image
-        run: |
-          make build version=${{ steps.get_version.outputs.version }}
+        run: make build version=${{ steps.get_version.outputs.version }}
 
       - name: Push to DockerHub
         run: |
