@@ -61,4 +61,4 @@ jobs:
             rm -f ~/.github_token
           slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
           # dingtalk_webhook: ${{ secrets.DINGTALK_WEBHOOK }}
-          # feishu_webhook: ${{ secrets.FEISHU_WEBHOOK }}
+          # lark_webhook: ${{ secrets.LARK_WEBHOOK }}

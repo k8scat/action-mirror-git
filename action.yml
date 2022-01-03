@@ -68,10 +68,10 @@ inputs:
     description: "Slack webhook url"
     required: false
   dingtalk_webhook:
-    description: "Dingtalk webhook url"
+    description: "DingTalk webhook url"
     required: false
-  feishu_webhook:
-    description: "Feishu webhook url"
+  lark_webhook:
+    description: "Lark webhook url"
     required: false
 runs:
   using: "docker"
