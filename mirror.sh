@@ -43,7 +43,7 @@ fi
 
 IFS=","
 for repo_name in ${MIRROR_REPOS}; do
-  if [[ "${IGNORE_REPOS}" =~ "${repo_name}" ]]; then
+  if [[ "${IGNORED_REPOS}" =~ "${repo_name}" ]]; then
     continue
   fi
 

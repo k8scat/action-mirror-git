@@ -49,7 +49,7 @@ jobs:
           push_tags: "true"
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
           skip_tags_repos: "repo3,repo4"
-          ignore_repos: "repo5,repo6"
+          ignored_repos: "repo5,repo6"
           dest_create_repo_script: |
             # create repo via github cli
             echo "${DEST_TOKEN}" > ~/.github_token
