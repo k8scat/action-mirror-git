@@ -97,7 +97,4 @@ for repo_name in ${MIRROR_REPOS}; do
   else
     git push --mirror -f "${dest_addr}" || continue
   fi
-  if [[ "${ENABLE_GIT_LFS}" = "true" ]]; then
-    git lfs push --all "${dest_addr}" || continue
-  fi
 done

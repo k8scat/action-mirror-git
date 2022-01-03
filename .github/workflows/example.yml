@@ -46,7 +46,6 @@ jobs:
           dest_host: github.com
           dest_username: ${{ secrets.DEST_USERNAME }}
           dest_private_key: ${{ secrets.DEST_PRIVATE_KEY }}
-          enable_git_lfs: "true"
           push_tags: "true"
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
           skip_tags_repos: "repo3,repo4"

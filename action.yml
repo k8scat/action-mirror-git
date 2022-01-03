@@ -54,10 +54,6 @@ inputs:
   mirror_repos:
     description: "Repos to mirror, separated by comma"
     required: true
-  enable_git_lfs:
-    description: "use git lfs, true or false"
-    required: false
-    default: "false"
   push_tags:
     description: "Push tags via --mirror, true or false"
     required: false
@@ -86,7 +82,6 @@ runs:
     DEST_TOKEN: ${{ inputs.dest_token }}
     DEST_CREATE_REPO_SCRIPT: ${{ inputs.dest_create_repo_script }}
     MIRROR_REPOS: ${{ inputs.mirror_repos }}
-    ENABLE_GIT_LFS: ${{ inputs.enable_git_lfs }}
     PUSH_TAGS: ${{ inputs.push_tags }}
     SKIP_TAGS_REPOS: ${{ inputs.skip_tags_repos }}
     IGNORED_REPOS: ${{ inputs.ignored_repos }}
