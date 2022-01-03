@@ -75,4 +75,4 @@ inputs:
     required: false
 runs:
   using: "docker"
-  image: "docker://gigrator/mirror-git:0.0.11"
+  image: "docker://ghcr.io/gigrator/mirror-git:0.0.12"
