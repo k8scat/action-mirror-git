@@ -1,14 +1,28 @@
 #!/bin/bash
 # Created by K8sCat <k8scat@gmail.com>
-set -e
+set +e
+message_script="/mirror-git/functions/message"
+[[ -f "${message_script}" ]] && source "${message_script}" || true
 
 WORKDIR="/tmp/repos"
+
 mkdir -p ${WORKDIR}
 cd ${WORKDIR} || exit 1
 
 SSH_DIR="${HOME}/.ssh"
 mkdir -p "${SSH_DIR}"
 chmod 0700 "${SSH_DIR}"
+
+# message
+if [[ -n "${INPUT_SLACK_WEBHOOK}" ]]; then
+  export SLACK_WEBHOOK="${INPUT_SLACK_WEBHOOK}"
+fi
+if [[ -n "${INPUT_DINGTALK_WEBHOOK}" ]]; then
+  export DINGTALK_WEBHOOK="${INPUT_DINGTALK_WEBHOOK}"
+fi
+if [[ -n "${INPUT_LARK_WEBHOOK}" ]]; then
+  export LARK_WEBHOOK="${INPUT_LARK_WEBHOOK}"
+fi
 
 function write_ssh_config() {
   type=$1
@@ -28,73 +42,111 @@ Host ${new_host}
     User git
     Port ${port:-22}
     IdentityFile ${privkey_file}
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
 EOF
   echo "${new_host}"
 }
 
-if [[ "${SOURCE_PROTOCOL}" = "ssh" ]]; then
-  SOURCE_HOST=$(write_ssh_config "source" "${SOURCE_HOST}" "${SOURCE_PORT}" "${SOURCE_USERNAME}" "${SOURCE_PRIVATE_KEY}")
-  export SOURCE_HOST
+if [[ "${INPUT_SOURCE_PROTOCOL}" = "ssh" ]]; then
+  INPUT_SOURCE_HOST=$(write_ssh_config "source" "${INPUT_SOURCE_HOST}" "${INPUT_SOURCE_PORT}" "${INPUT_SOURCE_USERNAME}" "${INPUT_SOURCE_PRIVATE_KEY}")
+  export INPUT_SOURCE_HOST
 fi
-if [[ "${DEST_PROTOCOL}" = "ssh" ]]; then
-  DEST_HOST=$(write_ssh_config "dest" "${DEST_HOST}" "${DEST_PORT}" "${DEST_USERNAME}" "${DEST_PRIVATE_KEY}")
-  export DEST_HOST
+if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
+  INPUT_DEST_HOST=$(write_ssh_config "dest" "${INPUT_DEST_HOST}" "${INPUT_DEST_PORT}" "${INPUT_DEST_USERNAME}" "${INPUT_DEST_PRIVATE_KEY}")
+  export INPUT_DEST_HOST
 fi
 
-IFS=","
-for repo_name in ${MIRROR_REPOS}; do
-  if [[ "${IGNORED_REPOS}" =~ "${repo_name}" ]]; then
-    continue
+function notify() {
+  if [[ -n "${SLACK_WEBHOOK}" ]]; then
+    slack_notify "${1}"
   fi
+  if [[ -n "${DINGTALK_WEBHOOK}" ]]; then
+    dingtalk_notify "${1}"
+  fi
+  if [[ -n "${LARK_WEBHOOK}" ]]; then
+    lark_notify "${1}"
+  fi
+  return 0
+}
 
-  cd ${WORKDIR} || exit 1
-
-  if [[ "${SOURCE_PROTOCOL}" = "ssh" ]]; then
-    source_addr="git@${SOURCE_HOST}:${SOURCE_USERNAME}/${repo_name}.git"
-  elif [[ "${SOURCE_PROTOCOL}" = "https" ]]; then
-    source_addr="https://${SOURCE_TOKEN}@${SOURCE_HOST}"
-    if [[ -n "${SOURCE_PORT}" ]]; then
-      source_addr="${source_addr}:${SOURCE_PORT}"
+function mirror() {
+  IFS=","
+  for repo_name in ${INPUT_MIRROR_REPOS}; do
+    if [[ "${INPUT_IGNORED_REPOS}" =~ "${repo_name}" ]]; then
+      continue
     fi
-    source_addr="${source_addr}/${SOURCE_USERNAME}/${repo_name}.git"
-  else
-    echo "Unknown source protocol: ${SOURCE_PROTOCOL}"
-    exit 1
-  fi
-  echo "source_addr: ${source_addr}"
 
-  if [[ "${DEST_PROTOCOL}" = "ssh" ]]; then
-    dest_addr="git@${DEST_HOST}:${DEST_USERNAME}/${repo_name}.git"
-  elif [[ "${DEST_PROTOCOL}" = "https" ]]; then
-    dest_addr="https://${DEST_TOKEN}@${DEST_HOST}"
-    if [[ -n "${DEST_PORT}" ]]; then
-      dest_addr="${dest_addr}:${DEST_PORT}"
-    fi
-    dest_addr="${dest_addr}/${DEST_USERNAME}/${repo_name}.git"
-  else
-    echo "Unknown source protocol: ${DEST_PROTOCOL}"
-    exit 1
-  fi
-  echo "dest_addr: ${dest_addr}"
+    cd ${WORKDIR} || return 1
 
-  git clone --bare "${source_addr}" "${repo_name}"
-
-  export REPO_NAME=$repo_name
-  if [[ -n "${DEST_CREATE_REPO_SCRIPT}" ]]; then
-    if [[ $(echo "${DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${DEST_CREATE_REPO_SCRIPT}" =~ http*://* ]]; then
-      curl -L "${DEST_CREATE_REPO_SCRIPT}" -o /tmp/create_repo
+    if [[ "${INPUT_SOURCE_PROTOCOL}" = "ssh" ]]; then
+      source_addr="git@${INPUT_SOURCE_HOST}:${INPUT_SOURCE_USERNAME}/${repo_name}.git"
+    elif [[ "${INPUT_SOURCE_PROTOCOL}" = "https" ]]; then
+      source_addr="https://${INPUT_SOURCE_TOKEN}@${INPUT_SOURCE_HOST}"
+      if [[ -n "${INPUT_SOURCE_PORT}" ]]; then
+        source_addr="${source_addr}:${INPUT_SOURCE_PORT}"
+      fi
+      source_addr="${source_addr}/${INPUT_SOURCE_USERNAME}/${repo_name}.git"
     else
-      echo "${DEST_CREATE_REPO_SCRIPT}" > /tmp/create_repo
+      echo "Unknown source protocol: ${INPUT_SOURCE_PROTOCOL}"
+      return 1
     fi
-    chmod +x /tmp/create_repo
-    /tmp/create_repo
-  fi
+    echo "source_addr: ${source_addr}"
 
-  repo_dir="${WORKDIR}/${repo_name}"
-  cd "${repo_dir}" || exit 1
-  if [[ "${PUSH_TAGS}" = "false" || "${SKIP_TAGS_REPOS}" =~ "${repo_name}" ]]; then
-    git push --all -f "${dest_addr}" || continue
+    if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
+      dest_addr="git@${INPUT_DEST_HOST}:${INPUT_DEST_USERNAME}/${repo_name}.git"
+    elif [[ "${INPUT_DEST_PROTOCOL}" = "https" ]]; then
+      dest_addr="https://${INPUT_DEST_TOKEN}@${INPUT_DEST_HOST}"
+      if [[ -n "${INPUT_DEST_PORT}" ]]; then
+        dest_addr="${dest_addr}:${INPUT_DEST_PORT}"
+      fi
+      dest_addr="${dest_addr}/${INPUT_DEST_USERNAME}/${repo_name}.git"
+    else
+      echo "Unknown source protocol: ${INPUT_DEST_PROTOCOL}"
+      return 1
+    fi
+    echo "dest_addr: ${dest_addr}"
+
+    if ! git clone --bare "${source_addr}" "${repo_name}"; then
+      return 1
+    fi
+
+    export REPO_NAME=$repo_name
+    if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
+      if [[ $(echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ http*://* ]]; then
+        if ! curl -L "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /tmp/create_repo; then
+          return 1
+        fi
+      else
+        echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /tmp/create_repo
+      fi
+      chmod +x /tmp/create_repo
+      /tmp/create_repo
+    fi
+
+    repo_dir="${WORKDIR}/${repo_name}"
+    cd "${repo_dir}" || exit 1
+    if [[ "${INPUT_PUSH_TAGS}" = "false" || "${INPUT_SKIP_TAGS_REPOS}" =~ "${repo_name}" ]]; then
+      if ! git push --all -f "${dest_addr}"; then
+        notify "Failed to push ${repo_name} to ${dest_addr} with --all flag"
+        continue
+      fi
+    else
+      if ! git push --mirror -f "${dest_addr}"; then
+        notify "Failed to push ${repo_name} to ${dest_addr} with --mirror flag"
+        continue
+      fi
+    fi
+  done
+}
+
+function main() {
+  notify "Mirror Git starting"
+  if mirror; then
+    notify "Mirror Git finished"
   else
-    git push --mirror -f "${dest_addr}" || continue
+    notify "Mirror Git failed"
   fi
-done
+}
+
+main "$@"

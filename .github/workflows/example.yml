@@ -36,7 +36,7 @@ jobs:
           echo "::set-output name=repo_list::${repo_list}"
 
       - name: action-git-mirror
-        uses: k8scat/action-git-mirror@v0.0.8
+        uses: k8scat/action-git-mirror@v0.0.9
         with:
           source_protocol: https
           source_host: github.com
@@ -48,7 +48,9 @@ jobs:
           dest_private_key: ${{ secrets.DEST_PRIVATE_KEY }}
           push_tags: "true"
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
+          # repo3 and repo4 will only sync branches and commits
           skip_tags_repos: "repo3,repo4"
+          # repo5 and repo6 will not be synced
           ignored_repos: "repo5,repo6"
           dest_create_repo_script: |
             # create repo via github cli
@@ -57,3 +59,6 @@ jobs:
             gh auth status
             gh repo create "${DEST_USERNAME}/${REPO_NAME}" --private
             rm -f ~/.github_token
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+          # dingtalk_webhook: ${{ secrets.DINGTALK_WEBHOOK }}
+          # feishu_webhook: ${{ secrets.FEISHU_WEBHOOK }}

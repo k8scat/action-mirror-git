@@ -64,24 +64,15 @@ inputs:
   ignored_repos:
     description: "Ignore these repos, seperated by comma"
     required: false
+  slack_webhook:
+    description: "Slack webhook url"
+    required: false
+  dingtalk_webhook:
+    description: "Dingtalk webhook url"
+    required: false
+  feishu_webhook:
+    description: "Feishu webhook url"
+    required: false
 runs:
   using: "docker"
-  image: "Dockerfile"
-  env:
-    SOURCE_PROTOCOL: ${{ inputs.source_protocol }}
-    SOURCE_HOST: ${{ inputs.source_host }}
-    SOURCE_PORT: ${{ inputs.source_port }}
-    SOURCE_USERNAME: ${{ inputs.source_username }}
-    SOURCE_PRIVATE_KEY: ${{ inputs.source_private_key }}
-    SOURCE_TOKEN: ${{ inputs.source_token }}
-    DEST_PROTOCOL: ${{ inputs.dest_protocol }}
-    DEST_HOST: ${{ inputs.dest_host }}
-    DEST_PORT: ${{ inputs.dest_port }}
-    DEST_USERNAME: ${{ inputs.dest_username }}
-    DEST_PRIVATE_KEY: ${{ inputs.dest_private_key }}
-    DEST_TOKEN: ${{ inputs.dest_token }}
-    DEST_CREATE_REPO_SCRIPT: ${{ inputs.dest_create_repo_script }}
-    MIRROR_REPOS: ${{ inputs.mirror_repos }}
-    PUSH_TAGS: ${{ inputs.push_tags }}
-    SKIP_TAGS_REPOS: ${{ inputs.skip_tags_repos }}
-    IGNORED_REPOS: ${{ inputs.ignored_repos }}
+  image: "docker://gigrator/mirror-git:0.0.9"

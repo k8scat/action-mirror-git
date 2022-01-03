@@ -11,5 +11,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Release
         uses: softprops/action-gh-release@v0.1.14
+
+      - name: Get version
+        id: get_version
+        run: echo "::set-output name=version::${GITHUB_REF/refs\/tags\/v/}"
+
+      - name: Build mirror-git image
+        run: |
+          make build version=${{ steps.get_version.outputs.version }}
+
+      - name: Push to DockerHub
+        run: |
+          make push-cr \
+            version=${{ steps.get_version.outputs.version }} \
+            cr_token=${{ secrets.CR_TOKEN }}
+
+      - name: Push to GitHub CR
+        run: |
+          make push-ghcr \
+            version=${{ steps.get_version.outputs.version }} \
+            cr_token=${{ secrets.GITHUB_TOKEN }}
