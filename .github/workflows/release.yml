@@ -32,4 +32,4 @@ jobs:
         run: |
           make push-ghcr \
             version=${{ steps.get_version.outputs.version }} \
-            cr_token=${{ secrets.GITHUB_TOKEN }}
+            ghcr_token=${{ secrets.GITHUB_TOKEN }}
