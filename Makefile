@@ -1,4 +1,4 @@
-version = 0.0.12
+version = 0.0.13
 image = mirror-git:$(version)
 
 cr_user = gigrator
