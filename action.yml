@@ -73,6 +73,10 @@ inputs:
   lark_webhook:
     description: "Lark webhook url"
     required: false
+  force_push:
+    description: "Recreate repo if push failed, true or false"
+    required: false
+    default: "false"
 runs:
   using: "docker"
-  image: "docker://ghcr.io/k8scat/mirror-git:0.0.13"
+  image: "docker://ghcr.io/k8scat/mirror-git:0.0.14"

@@ -1,8 +1,10 @@
 #!/bin/bash
 # Created by K8sCat <k8scat@gmail.com>
 set +e
-message_script="/mirror-git/functions/message"
-[[ -f "${message_script}" ]] && source "${message_script}" || true
+
+for f in /mirror-git/functions/*; do
+  source "${f}"
+done
 
 WORKDIR="/tmp/repos"
 
@@ -111,7 +113,7 @@ function mirror() {
       return 1
     fi
 
-    export REPO_NAME=$repo_name
+    export REPO_NAME="${repo_name}"
     if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
       if [[ $(echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ http*://* ]]; then
         if ! curl -L "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /tmp/create_repo; then
@@ -129,12 +131,25 @@ function mirror() {
     if [[ "${INPUT_PUSH_TAGS}" = "false" || "${INPUT_SKIP_TAGS_REPOS}" =~ "${repo_name}" ]]; then
       if ! git push --all -f "${dest_addr}"; then
         notify "Failed to push ${repo_name} to ${dest_addr} with --all flag"
-        continue
+        if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_TOKEN}" ]]; then
+          if ! git_delete_repo "${INPUT_DEST_TOKEN}" "${INPUT_DEST_USERNAME}" "${repo_name}"; then
+            notify "Failed to delete repo: ${repo_name}"
+            continue
+          fi
+          git push --all -f "${dest_addr}" || true
+        fi
       fi
-    else
-      if ! git push --mirror -f "${dest_addr}"; then
-        notify "Failed to push ${repo_name} to ${dest_addr} with --mirror flag"
-        continue
+      continue
+    fi
+
+    if ! git push --mirror -f "${dest_addr}"; then
+      notify "Failed to push ${repo_name} to ${dest_addr} with --mirror flag"
+      if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_TOKEN}" ]]; then
+        if ! git_delete_repo "${INPUT_DEST_TOKEN}" "${INPUT_DEST_USERNAME}" "${repo_name}"; then
+          notify "Failed to delete repo: ${repo_name}"
+          continue
+        fi
+        git push --mirror -f "${dest_addr}" || true
       fi
     fi
   done
