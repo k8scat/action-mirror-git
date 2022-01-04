@@ -28,6 +28,9 @@ inputs:
   source_token:
     description: "Personal access token"
     required: false
+  source_token_username:
+    description: "Username who owned the token"
+    required: false
   dest_protocol:
     description: "https or ssh"
     require: true
@@ -47,6 +50,9 @@ inputs:
     required: false
   dest_token:
     description: "Personal access token"
+    required: false
+  dest_token_username:
+    description: "Username who owned the token"
     required: false
   dest_create_repo_script:
     description: "Script used to create repo on dest git server"
@@ -90,4 +96,4 @@ inputs:
     default: "Powered by https://github.com/k8scat/action-mirror-git"
 runs:
   using: "docker"
-  image: "docker://ghcr.io/k8scat/mirror-git:0.0.19"
+  image: "docker://ghcr.io/k8scat/mirror-git:0.0.20"

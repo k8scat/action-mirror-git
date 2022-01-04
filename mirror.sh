@@ -15,6 +15,13 @@ SSH_DIR="${HOME}/.ssh"
 mkdir -p "${SSH_DIR}"
 chmod 0700 "${SSH_DIR}"
 
+if [[ -z "${INPUT_SOURCE_TOKEN_USERNAME}" ]]; then
+  export INPUT_SOURCE_TOKEN_USERNAME="${INPUT_SOURCE_USERNAME}"
+fi
+if [[ -z "${INPUT_DEST_TOKEN_USERNAME}" ]]; then
+  export INPUT_DEST_TOKEN_USERNAME="${INPUT_DEST_USERNAME}"
+fi
+
 # create_repo
 if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
   if [[ $(echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ "http".*"://".* ]]; then
@@ -123,7 +130,7 @@ function mirror() {
     if [[ "${INPUT_SOURCE_PROTOCOL}" = "ssh" ]]; then
       source_addr="git@${INPUT_SOURCE_HOST}:${INPUT_SOURCE_USERNAME}/${repo_name}.git"
     elif [[ "${INPUT_SOURCE_PROTOCOL}" = "https" ]]; then
-      source_addr="https://${INPUT_SOURCE_USERNAME}:${INPUT_SOURCE_TOKEN}@${INPUT_SOURCE_HOST}"
+      source_addr="https://${INPUT_SOURCE_TOKEN_USERNAME}:${INPUT_SOURCE_TOKEN}@${INPUT_SOURCE_HOST}"
       if [[ -n "${INPUT_SOURCE_PORT}" ]]; then
         source_addr="${source_addr}:${INPUT_SOURCE_PORT}"
       fi
@@ -137,7 +144,7 @@ function mirror() {
     if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
       dest_addr="git@${INPUT_DEST_HOST}:${INPUT_DEST_USERNAME}/${repo_name}.git"
     elif [[ "${INPUT_DEST_PROTOCOL}" = "https" ]]; then
-      dest_addr="https://${INPUT_DEST_USERNAME}:${INPUT_DEST_TOKEN}@${INPUT_DEST_HOST}"
+      dest_addr="https://${INPUT_DEST_TOKEN_USERNAME}:${INPUT_DEST_TOKEN}@${INPUT_DEST_HOST}"
       if [[ -n "${INPUT_DEST_PORT}" ]]; then
         dest_addr="${dest_addr}:${INPUT_DEST_PORT}"
       fi
