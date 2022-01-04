@@ -4,13 +4,129 @@ Synchronize git repositories like a mirror.
 
 ## Support
 
-- [x] Multi platforms like GitHub, GitLab, BitBucket, etc.
+- [x] Any git server like GitHub, GitLab, BitBucket, Gitee etc.
 - [x] Protocol under HTTPS and SSH
-- [x] Sync branches, tags and commits
+- [x] Sync branches, tags, commits, even Git LFS objects
 - [x] Ignore specific repositories
 - [x] Specify repositories without pushing tags
 - [x] Auto create repository on the dest git server with custom script
 - [x] Notify with Slack, DingTalk or Lark
+- [x] Force push if failed
+
+### Any git server
+
+```yaml
+# GitHub
+source_host: github.com
+
+# Self-hosted
+source_host: git.example.com
+source_port: 8443
+```
+
+### Protocol under HTTPS and SSH
+
+```yaml
+# HTTPS will use personal access token to authenticate, the token username is required on some git servers like Gitee
+source_protocol: https
+source_token: github-token-created-under-k8scat-account
+
+# Gitee
+# The source_username will be used as the token username if source_token_username is not specified
+source_protocol: https
+source_username: huayin-opensource
+source_token: gitee-token-created-under-k8scat-account
+source_token_username: k8scat
+
+# SSH requires the private key to authenticate
+dest_protocol: ssh
+dest_private_key: |
+  -----BEGIN OPENSSH PRIVATE KEY-----
+  b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+  ...
+  OOWdOkxLqLsiMAAAAEdGVzdAECAwQFBgc=
+  -----END OPENSSH PRIVATE KEY-----
+```
+
+### Sync branches, tags, commits, even Git LFS objects
+
+```yaml
+# Branch and commits will be synced by default
+
+# Sync tags
+push_tags: "true"
+
+# Sync Git LFS objects
+enable_git_lfs: "true"
+```
+
+Refer to [Duplicating a repository](https://docs.github.com/cn/repositories/creating-and-managing-repositories/duplicating-a-repository).
+
+### Ignore specific repositories
+
+```yaml
+# repo5 and repo6 will not be synced
+ignored_repos: "repo5,repo6"
+```
+
+### Specify repositories without pushing tags
+
+```yaml
+# repo3 and repo4 will only sync branches and commits
+skip_tags_repos: "repo3,repo4"
+```
+
+### Auto create repository
+
+```yaml
+# Custom script to create repository
+dest_create_repo_script: |
+  # create repo via github cli
+  if ! gh auth status; then
+    token_file="/tmp/.github_token"
+    echo "${INPUT_DEST_TOKEN}" > "${token_file}"
+    gh auth login --with-token < "${token_file}"
+    gh auth status
+  fi
+  repo="${INPUT_DEST_USERNAME}/${REPO_NAME}"
+  found=$(gh repo list ${{ secrets.SOURCE_USERNAME }} -L 1000 | grep -i "${repo}")
+  if [[ -z "${found}" ]]; then
+    gh repo create "${INPUT_DEST_USERNAME}/${REPO_NAME}" --private
+  fi
+
+# Specify the script url to create repository
+dest_create_repo_script: https://example.com/create_repo.sh
+```
+
+### Notify
+
+```yaml
+# Slack
+slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+
+# DingTalk
+dingtalk_webhook: ${{ secrets.DINGTALK_WEBHOOK }}
+
+# Lark
+lark_webhook: ${{ secrets.LARK_WEBHOOK }}
+```
+
+### Force push
+
+**Force push will delete the existed repository on the dest git server when push failed, then push again.**
+
+```yaml
+force_push: "true"
+dest_delete_repo_script: |
+  # delete repo via github cli
+  if ! gh auth status; then
+    token_file="/tmp/.github_token"
+    echo "${INPUT_DEST_TOKEN}" > "${token_file}"
+    gh auth login --with-token < "${token_file}"
+    gh auth status
+  fi
+  gh repo delete "${INPUT_DEST_USERNAME}/${REPO_NAME}" --confirm
+```
 
 ## Example
 

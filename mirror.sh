@@ -180,21 +180,26 @@ function mirror() {
           fi
         fi
       fi
-      continue
-    fi
-
-    if ! git push --mirror -f "${dest_addr}"; then
-      notify "Failed to push ${repo_name} to ${dest_addr} with --mirror flag"
-      if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" && -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
-        if ! delete_repo; then
-          notify "Failed to delete repo: ${repo_name}"
-          return 1
-        fi
-        create_repo || return 1
-        if ! git push --mirror -f "${dest_addr}"; then
-          return 1
+    else
+      if ! git push --mirror -f "${dest_addr}"; then
+        notify "Failed to push ${repo_name} to ${dest_addr} with --mirror flag"
+        if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" && -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
+          if ! delete_repo; then
+            notify "Failed to delete repo: ${repo_name}"
+            return 1
+          fi
+          create_repo || return 1
+          if ! git push --mirror -f "${dest_addr}"; then
+            return 1
+          fi
         fi
       fi
+    fi
+
+    if [[ "${INPUT_ENABLE_GIT_LFS}" = "true" ]]; then
+      cd "${repo_name}" || return 1
+      git lfs fetch --all
+      git lfs push --all "${dest_addr}"
     fi
   done
 }
@@ -205,6 +210,7 @@ function main() {
     notify "Mirror Git finished"
   else
     notify "Mirror Git failed"
+    return 1
   fi
 }
 

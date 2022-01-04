@@ -94,6 +94,10 @@ inputs:
     description: "Suffix for notify message"
     required: false
     default: "Powered by https://github.com/k8scat/action-mirror-git"
+  enable_git_lfs:
+    description: "Push the repository's Git Large File Storage objects"
+    required: false
+    default: "false"
 runs:
   using: "docker"
   image: "docker://ghcr.io/k8scat/mirror-git:0.0.20"
