@@ -137,7 +137,7 @@ function mirror() {
     if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
       dest_addr="git@${INPUT_DEST_HOST}:${INPUT_DEST_USERNAME}/${repo_name}.git"
     elif [[ "${INPUT_DEST_PROTOCOL}" = "https" ]]; then
-      dest_addr="https://${INPUT_DEST _USERNAME}:${INPUT_DEST_TOKEN}@${INPUT_DEST_HOST}"
+      dest_addr="https://${INPUT_DEST_USERNAME}:${INPUT_DEST_TOKEN}@${INPUT_DEST_HOST}"
       if [[ -n "${INPUT_DEST_PORT}" ]]; then
         dest_addr="${dest_addr}:${INPUT_DEST_PORT}"
       fi
