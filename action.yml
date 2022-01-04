@@ -77,6 +77,17 @@ inputs:
     description: "Recreate repo if push failed, true or false"
     required: false
     default: "false"
+  dest_delete_repo_script:
+    description: "Script used to delete repo on dest git server"
+    required: false
+  notify_prefix:
+    description: "Prefix for notify message"
+    required: false
+    default: "Mirror Git"
+  notify_suffix:
+    description: "Suffix for notify message"
+    required: false
+    default: "Powered by https://github.com/k8scat/action-mirror-git"
 runs:
   using: "docker"
-  image: "docker://ghcr.io/k8scat/mirror-git:0.0.16"
+  image: "docker://ghcr.io/k8scat/mirror-git:0.0.17"

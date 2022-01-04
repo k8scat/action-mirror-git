@@ -15,6 +15,30 @@ SSH_DIR="${HOME}/.ssh"
 mkdir -p "${SSH_DIR}"
 chmod 0700 "${SSH_DIR}"
 
+# create_repo
+if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
+  if [[ $(echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ "http".*"://".* ]]; then
+    if ! curl -L "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /usr/bin/create_repo; then
+      exit 1
+    fi
+  else
+    echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /usr/bin/create_repo
+  fi
+  chmod +x /usr/bin/create_repo
+fi
+
+# delete_repo
+if [[ -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" ]]; then
+  if [[ $(echo "${INPUT_DEST_DELETE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ "http".*"://".* ]]; then
+    if ! curl -L -k "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /usr/bin/delete_repo; then
+      exit 1
+    fi
+  else
+    echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /usr/bin/delete_repo
+  fi
+  chmod +x /usr/bin/delete_repo
+fi
+
 # message
 if [[ -n "${INPUT_SLACK_WEBHOOK}" ]]; then
   export SLACK_WEBHOOK="${INPUT_SLACK_WEBHOOK}"
@@ -25,6 +49,33 @@ fi
 if [[ -n "${INPUT_LARK_WEBHOOK}" ]]; then
   export LARK_WEBHOOK="${INPUT_LARK_WEBHOOK}"
 fi
+
+function notify() {
+  local msg="${1}"
+  echo "notify: ${msg}"
+
+  if [[ -n "${INPUT_NOTIFY_PREFIX}" ]]; then
+    msg="[${INPUT_NOTIFY_PREFIX}] ${msg}"
+  fi
+  if [[ -n "${GITHUB_SERVER_URL}" && -n "${GITHUB_REPOSITORY}" && -n "${GITHUB_RUN_ID}" ]]; then
+    local run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+    msg="${msg}\n\nrun_url: ${run_url}"
+  fi
+  if [[ -n "${INPUT_NOTIFY_SUFFIX}" ]]; then
+    msg="${msg}\n\n${INPUT_NOTIFY_SUFFIX}"
+  fi
+
+  if [[ -n "${SLACK_WEBHOOK}" ]]; then
+    slack_notify "${msg}"
+  fi
+  if [[ -n "${DINGTALK_WEBHOOK}" ]]; then
+    dingtalk_notify "${msg}"
+  fi
+  if [[ -n "${LARK_WEBHOOK}" ]]; then
+    lark_notify "${msg}"
+  fi
+  return 0
+}
 
 function write_ssh_config() {
   type=$1
@@ -59,26 +110,13 @@ if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
   export INPUT_DEST_HOST
 fi
 
-function notify() {
-  echo "notify: ${1}"
-  if [[ -n "${SLACK_WEBHOOK}" ]]; then
-    slack_notify "${1}"
-  fi
-  if [[ -n "${DINGTALK_WEBHOOK}" ]]; then
-    dingtalk_notify "${1}"
-  fi
-  if [[ -n "${LARK_WEBHOOK}" ]]; then
-    lark_notify "${1}"
-  fi
-  return 0
-}
-
 function mirror() {
   IFS=","
   for repo_name in ${INPUT_MIRROR_REPOS}; do
     if [[ "${INPUT_IGNORED_REPOS}" =~ "${repo_name}" ]]; then
       continue
     fi
+    export REPO_NAME="${repo_name}"
 
     cd ${WORKDIR} || return 1
 
@@ -115,17 +153,8 @@ function mirror() {
       return 1
     fi
 
-    export REPO_NAME="${repo_name}"
     if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
-      if [[ $(echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ http*://* ]]; then
-        if ! curl -L "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /tmp/create_repo; then
-          return 1
-        fi
-      else
-        echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /tmp/create_repo
-      fi
-      chmod +x /tmp/create_repo
-      /tmp/create_repo
+      create_repo || return 1
     fi
 
     repo_dir="${WORKDIR}/${repo_name}"
@@ -133,12 +162,12 @@ function mirror() {
     if [[ "${INPUT_PUSH_TAGS}" = "false" || "${INPUT_SKIP_TAGS_REPOS}" =~ "${repo_name}" ]]; then
       if ! git push --all -f "${dest_addr}"; then
         notify "Failed to push ${repo_name} to ${dest_addr} with --all flag"
-        if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_TOKEN}" ]]; then
-          if ! git_delete_repo "${INPUT_DEST_TOKEN}" "${INPUT_DEST_USERNAME}" "${repo_name}"; then
+        if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" && -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
+          if ! delete_repo; then
             notify "Failed to delete repo: ${repo_name}"
             return 1
           fi
-          /tmp/create_repo
+          create_repo || return 1
           if ! git push --all -f "${dest_addr}"; then
             return 1
           fi
@@ -149,12 +178,12 @@ function mirror() {
 
     if ! git push --mirror -f "${dest_addr}"; then
       notify "Failed to push ${repo_name} to ${dest_addr} with --mirror flag"
-      if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_TOKEN}" ]]; then
-        if ! git_delete_repo "${INPUT_DEST_TOKEN}" "${INPUT_DEST_USERNAME}" "${repo_name}"; then
+      if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" && -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
+        if ! delete_repo; then
           notify "Failed to delete repo: ${repo_name}"
           return 1
         fi
-        /tmp/create_repo
+        create_repo || return 1
         if ! git push --mirror -f "${dest_addr}"; then
           return 1
         fi

@@ -36,7 +36,7 @@ jobs:
           echo "::set-output name=repo_list::${repo_list}"
 
       - name: action-git-mirror
-        uses: k8scat/action-git-mirror@v0.0.16
+        uses: k8scat/action-git-mirror@v0.0.17
         with:
           source_protocol: https
           source_host: github.com
@@ -54,14 +54,29 @@ jobs:
           ignored_repos: "repo5,repo6"
           dest_create_repo_script: |
             # create repo via github cli
-            token_file="/tmp/.github_token"
-            if [[ ! -f "${token_file}" ]]; then
+            if ! gh auth status; then
+              token_file="/tmp/.github_token"
               echo "${INPUT_DEST_TOKEN}" > "${token_file}"
               gh auth login --with-token < "${token_file}"
               gh auth status
+            fi
+
+            repo="${INPUT_DEST_USERNAME}/${REPO_NAME}"
+            found=$(gh repo list ${{ secrets.SOURCE_USERNAME }} -L 1000 | grep -i "${repo}")
+            if [[ -n "${found}" ]]; then
+              exit 0
             fi
             gh repo create "${INPUT_DEST_USERNAME}/${REPO_NAME}" --private
           slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
           # dingtalk_webhook: ${{ secrets.DINGTALK_WEBHOOK }}
           # lark_webhook: ${{ secrets.LARK_WEBHOOK }}
           force_push: "true"
+          dest_delete_repo_script: |
+            # delete repo via github cli
+            if ! gh auth status; then
+              token_file="/tmp/.github_token"
+              echo "${INPUT_DEST_TOKEN}" > "${token_file}"
+              gh auth login --with-token < "${token_file}"
+              gh auth status
+            fi
+            gh repo delete "${INPUT_DEST_USERNAME}/${REPO_NAME}" --confirm

@@ -42,7 +42,9 @@ docker run \
   -e INPUT_DINGTALK_WEBHOOK \
   -e INPUT_LARK_WEBHOOK="xxx" \
   -e INPUT_FORCE_PUSH="false" \
-  gigrator/mirror-git:0.0.16
+  -e INPUT_NOTIFY_PREFIX="Mirror Git" \
+  -e INPUT_NOTIFY_SUFFIX="Powered by https://github.com/k8scat/action-mirror-git" \
+  gigrator/mirror-git:0.0.17
 ```
 
 ## LICENSE
