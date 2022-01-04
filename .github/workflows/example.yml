@@ -54,11 +54,13 @@ jobs:
           ignored_repos: "repo5,repo6"
           dest_create_repo_script: |
             # create repo via github cli
-            echo "${INPUT_DEST_TOKEN}" > ~/.github_token
-            gh auth login --with-token < ~/.github_token
-            gh auth status
+            token_file="/tmp/.github_token"
+            if [[ ! -f "${token_file}" ]]; then
+              echo "${INPUT_DEST_TOKEN}" > "${token_file}"
+              gh auth login --with-token < "${token_file}"
+              gh auth status
+            fi
             gh repo create "${INPUT_DEST_USERNAME}/${REPO_NAME}" --private
-            rm -f ~/.github_token
           slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
           # dingtalk_webhook: ${{ secrets.DINGTALK_WEBHOOK }}
           # lark_webhook: ${{ secrets.LARK_WEBHOOK }}
