@@ -90,4 +90,4 @@ inputs:
     default: "Powered by https://github.com/k8scat/action-mirror-git"
 runs:
   using: "docker"
-  image: "docker://ghcr.io/k8scat/mirror-git:0.0.18"
+  image: "docker://ghcr.io/k8scat/mirror-git:0.0.19"
