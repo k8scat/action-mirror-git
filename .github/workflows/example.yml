@@ -63,10 +63,9 @@ jobs:
 
             repo="${INPUT_DEST_USERNAME}/${REPO_NAME}"
             found=$(gh repo list ${{ secrets.SOURCE_USERNAME }} -L 1000 | grep -i "${repo}")
-            if [[ -n "${found}" ]]; then
-              exit 0
+            if [[ -z "${found}" ]]; then
+              gh repo create "${INPUT_DEST_USERNAME}/${REPO_NAME}" --private
             fi
-            gh repo create "${INPUT_DEST_USERNAME}/${REPO_NAME}" --private
           slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
           # dingtalk_webhook: ${{ secrets.DINGTALK_WEBHOOK }}
           # lark_webhook: ${{ secrets.LARK_WEBHOOK }}
