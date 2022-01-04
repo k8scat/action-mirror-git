@@ -42,7 +42,7 @@ docker run \
   -e INPUT_DINGTALK_WEBHOOK \
   -e INPUT_LARK_WEBHOOK="xxx" \
   -e INPUT_FORCE_PUSH="false" \
-  gigrator/mirror-git:0.0.14
+  gigrator/mirror-git:0.0.15
 ```
 
 ## LICENSE

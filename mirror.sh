@@ -60,6 +60,7 @@ if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
 fi
 
 function notify() {
+  echo "notify: ${1}"
   if [[ -n "${SLACK_WEBHOOK}" ]]; then
     slack_notify "${1}"
   fi
@@ -90,7 +91,7 @@ function mirror() {
       fi
       source_addr="${source_addr}/${INPUT_SOURCE_USERNAME}/${repo_name}.git"
     else
-      echo "Unknown source protocol: ${INPUT_SOURCE_PROTOCOL}"
+      notify "Unknown source protocol: ${INPUT_SOURCE_PROTOCOL}"
       return 1
     fi
     echo "source_addr: ${source_addr}"
@@ -104,12 +105,13 @@ function mirror() {
       fi
       dest_addr="${dest_addr}/${INPUT_DEST_USERNAME}/${repo_name}.git"
     else
-      echo "Unknown source protocol: ${INPUT_DEST_PROTOCOL}"
+      notify "Unknown source protocol: ${INPUT_DEST_PROTOCOL}"
       return 1
     fi
     echo "dest_addr: ${dest_addr}"
 
     if ! git clone --bare "${source_addr}" "${repo_name}"; then
+      notify "Failed to clone ${source_addr}"
       return 1
     fi
 
@@ -123,7 +125,10 @@ function mirror() {
         echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /tmp/create_repo
       fi
       chmod +x /tmp/create_repo
-      /tmp/create_repo
+      if ! /tmp/create_repo; then
+        notify "Failed to create repo: ${dest_addr}"
+        return 1
+      fi
     fi
 
     repo_dir="${WORKDIR}/${repo_name}"
@@ -134,9 +139,15 @@ function mirror() {
         if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_TOKEN}" ]]; then
           if ! git_delete_repo "${INPUT_DEST_TOKEN}" "${INPUT_DEST_USERNAME}" "${repo_name}"; then
             notify "Failed to delete repo: ${repo_name}"
-            continue
+            return 1
           fi
-          git push --all -f "${dest_addr}" || true
+          if ! /tmp/create_repo; then
+            notify "Failed to create repo: ${dest_addr}"
+            return 1
+          fi
+          if ! git push --all -f "${dest_addr}"; then
+            return 1
+          fi
         fi
       fi
       continue
@@ -147,9 +158,15 @@ function mirror() {
       if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_TOKEN}" ]]; then
         if ! git_delete_repo "${INPUT_DEST_TOKEN}" "${INPUT_DEST_USERNAME}" "${repo_name}"; then
           notify "Failed to delete repo: ${repo_name}"
-          continue
+          return 1
         fi
-        git push --mirror -f "${dest_addr}" || true
+        if ! /tmp/create_repo; then
+          notify "Failed to create repo: ${dest_addr}"
+          return 1
+        fi
+        if ! git push --mirror -f "${dest_addr}"; then
+          return 1
+        fi
       fi
     fi
   done
