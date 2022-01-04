@@ -125,10 +125,7 @@ function mirror() {
         echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /tmp/create_repo
       fi
       chmod +x /tmp/create_repo
-      if ! /tmp/create_repo; then
-        notify "Failed to create repo: ${dest_addr}"
-        return 1
-      fi
+      /tmp/create_repo
     fi
 
     repo_dir="${WORKDIR}/${repo_name}"
@@ -141,10 +138,7 @@ function mirror() {
             notify "Failed to delete repo: ${repo_name}"
             return 1
           fi
-          if ! /tmp/create_repo; then
-            notify "Failed to create repo: ${dest_addr}"
-            return 1
-          fi
+          /tmp/create_repo
           if ! git push --all -f "${dest_addr}"; then
             return 1
           fi
@@ -160,10 +154,7 @@ function mirror() {
           notify "Failed to delete repo: ${repo_name}"
           return 1
         fi
-        if ! /tmp/create_repo; then
-          notify "Failed to create repo: ${dest_addr}"
-          return 1
-        fi
+        /tmp/create_repo
         if ! git push --mirror -f "${dest_addr}"; then
           return 1
         fi

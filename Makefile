@@ -1,6 +1,6 @@
 os = $(shell uname -s)
 
-version = 0.0.15
+version = 0.0.16
 image = mirror-git:$(version)
 
 cr_user = gigrator
