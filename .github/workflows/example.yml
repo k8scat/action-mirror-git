@@ -64,3 +64,4 @@ jobs:
           slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
           # dingtalk_webhook: ${{ secrets.DINGTALK_WEBHOOK }}
           # lark_webhook: ${{ secrets.LARK_WEBHOOK }}
+          force_push: "true"
