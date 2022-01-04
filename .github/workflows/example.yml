@@ -16,9 +16,10 @@ jobs:
 
       - name: Login Source GitHub
         run: |
-          source functions/gh
-          gh_login "${{ secrets.SOURCE_TOKEN }}"
+          echo "${{ secrets.SOURCE_TOKEN }}" > /tmp/.github_token
+          gh auth login --with-token < /tmp/.github_token
           gh auth status
+          rm -f /tmp/.github_token
 
       - name: List repos
         id: list_repos
