@@ -132,6 +132,11 @@ dest_delete_repo_script: |
 
 [workflows/example.yml](./.github/workflows/example.yml)
 
+## Use cases
+
+- [Sync all repos from GitHub Organization to Gitee Organization](https://github.com/huayin-opensource/gitee-mirror)
+- [Sync all repos from GitHub Personal to Gitee Personal](https://github.com/k8scat/gitee-mirror)
+
 ## Run
 
 ```bash
