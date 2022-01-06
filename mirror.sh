@@ -27,6 +27,7 @@ function init_env() {
   export INPUT_NOTIFY_PREFIX="${INPUT_NOTIFY_PREFIX:-Mirror Git}"
   export INPUT_NOTIFY_SUFFIX="${INPUT_NOTIFY_SUFFIX:-Powered by https://github.com/k8scat/action-mirror-git}"
   export INPUT_ENABLE_GIT_LFS="${INPUT_ENABLE_GIT_LFS:-false}"
+  export INPUT_IGNORE_ERROR="${INPUT_IGNORE_ERROR:-false}"
 }
 
 function init_git() {
@@ -204,6 +205,9 @@ function mirror() {
 
     if ! git clone --bare "${source_addr}" "${REPO_NAME}"; then
       notify "Failed to clone ${source_addr}"
+      if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+        continue
+      fi
       return 1
     fi
 
@@ -211,6 +215,9 @@ function mirror() {
       echo "Creating repo: ${REPO_NAME}"
       if ! create_repo; then
         notify "Failed to create repo: ${REPO_NAME}"
+        if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+          continue
+        fi
         return 1
       fi
     fi
@@ -225,17 +232,26 @@ function mirror() {
           echo "Deleting repo: ${REPO_NAME}"
           if ! delete_repo; then
             notify "Failed to delete repo: ${REPO_NAME}"
+            if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+              continue
+            fi
             return 1
           fi
 
           echo "Creating repo: ${REPO_NAME}"
           if ! create_repo; then
             notify "Failed to create repo: ${REPO_NAME}"
+            if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+              continue
+            fi
             return 1
           fi
 
           if ! git push --all -f "${dest_addr}"; then
             notify "Still failed to push ${REPO_NAME} to ${dest_addr} with --all flag"
+            if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+              continue
+            fi
             return 1
           fi
         fi
@@ -247,17 +263,26 @@ function mirror() {
           echo "Deleting repo: ${REPO_NAME}"
           if ! delete_repo; then
             notify "Failed to delete repo: ${REPO_NAME}"
+            if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+              continue
+            fi
             return 1
           fi
 
           echo "Creating repo: ${REPO_NAME}"
           if ! create_repo; then
             notify "Failed to create repo: ${REPO_NAME}"
+            if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+              continue
+            fi
             return 1
           fi
 
           if ! git push --mirror -f "${dest_addr}"; then
             notify "Still failed to push ${REPO_NAME} to ${dest_addr} with --mirror flag"
+            if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+              continue
+            fi
             return 1
           fi
         fi
@@ -266,8 +291,20 @@ function mirror() {
 
     if [[ "${INPUT_ENABLE_GIT_LFS}" = "true" ]]; then
       cd "${REPO_NAME}" || return 1
-      git lfs fetch --all
-      git lfs push --all "${dest_addr}"
+      if ! git lfs fetch --all; then
+        notify "Failed to fetch lfs for ${REPO_NAME}"
+        if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+          continue
+        fi
+        return 1
+      fi
+      if ! git lfs push --all "${dest_addr}"; then
+        notify "Failed to push lfs for ${dest_addr}"
+        if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+          continue
+        fi
+        return 1
+      fi
     fi
   done
 }

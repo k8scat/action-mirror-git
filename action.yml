@@ -98,6 +98,10 @@ inputs:
     description: "Push the repository's Git Large File Storage objects"
     required: false
     default: "false"
+  ignore_error:
+    description: "Ignore error, true or false"
+    required: false
+    default: "false"
 runs:
   using: "docker"
-  image: "docker://ghcr.io/k8scat/mirror-git:0.0.26"
+  image: "docker://ghcr.io/k8scat/mirror-git:0.0.27"
