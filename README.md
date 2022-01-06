@@ -165,7 +165,7 @@ docker run \
   -e INPUT_FORCE_PUSH="false" \
   -e INPUT_NOTIFY_PREFIX="Mirror Git" \
   -e INPUT_NOTIFY_SUFFIX="Powered by https://github.com/k8scat/action-mirror-git" \
-  gigrator/mirror-git:0.0.23
+  gigrator/mirror-git:0.0.24
 ```
 
 ## LICENSE
