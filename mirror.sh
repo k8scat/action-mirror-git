@@ -2,16 +2,20 @@
 # Created by K8sCat <k8scat@gmail.com>
 set +e
 
-function init() {
+function init_workdir() {
+  WORKDIR="/data/repos"
+  mkdir -p ${WORKDIR}
+  cd ${WORKDIR} || exit 1
+}
+
+function init_functions() {
   for f in /mirror-git/functions/*; do
     # shellcheck disable=SC1090
     source "${f}"
   done
+}
 
-  WORKDIR="/data/repos"
-  mkdir -p ${WORKDIR}
-  cd ${WORKDIR} || exit 1
-
+function init_env() {
   export INPUT_SOURCE_TOKEN_USERNAME="${INPUT_SOURCE_TOKEN_USERNAME:-${INPUT_SOURCE_USERNAME}}"
   export INPUT_SOURCE_PROTOCOL="${INPUT_SOURCE_PROTOCOL:-https}"
   export INPUT_SOURCE_HOST="${INPUT_SOURCE_HOST:-github.com}"
@@ -23,6 +27,10 @@ function init() {
   export INPUT_NOTIFY_PREFIX="${INPUT_NOTIFY_PREFIX:-Mirror Git}"
   export INPUT_NOTIFY_SUFFIX="${INPUT_NOTIFY_SUFFIX:-Powered by https://github.com/k8scat/action-mirror-git}"
   export INPUT_ENABLE_GIT_LFS="${INPUT_ENABLE_GIT_LFS:-false}"
+}
+
+function init_git() {
+  git config --global http.postBuffer 524288000
 }
 
 function init_token_username() {
@@ -265,7 +273,10 @@ function mirror() {
 }
 
 function main() {
-  init
+  init_workdir
+  init_functions
+  init_env
+  init_git
   init_token_username
   init_scripts
   init_message
