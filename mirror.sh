@@ -201,12 +201,10 @@ function mirror() {
 
     if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
       echo "Creating repo: ${REPO_NAME}"
-      set -x
       if ! create_repo; then
         notify "Failed to create repo: ${REPO_NAME}"
         return 1
       fi
-      set +x
     fi
 
     repo_dir="${WORKDIR}/${REPO_NAME}"
@@ -217,20 +215,16 @@ function mirror() {
         notify "Failed to push ${REPO_NAME} to ${dest_addr} with --all flag"
         if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" && -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
           echo "Deleting repo: ${REPO_NAME}"
-          set -x
           if ! delete_repo; then
             notify "Failed to delete repo: ${REPO_NAME}"
             return 1
           fi
-          set +x
 
           echo "Creating repo: ${REPO_NAME}"
-          set -x
           if ! create_repo; then
             notify "Failed to create repo: ${REPO_NAME}"
             return 1
           fi
-          set +x
 
           if ! git push --all -f "${dest_addr}"; then
             notify "Still failed to push ${REPO_NAME} to ${dest_addr} with --all flag"
@@ -243,20 +237,16 @@ function mirror() {
         notify "Failed to push ${REPO_NAME} to ${dest_addr} with --mirror flag"
         if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" && -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
           echo "Deleting repo: ${REPO_NAME}"
-          set -x
           if ! delete_repo; then
             notify "Failed to delete repo: ${REPO_NAME}"
             return 1
           fi
-          set +x
 
           echo "Creating repo: ${REPO_NAME}"
-          set -x
           if ! create_repo; then
             notify "Failed to create repo: ${REPO_NAME}"
             return 1
           fi
-          set +x
 
           if ! git push --mirror -f "${dest_addr}"; then
             notify "Still failed to push ${REPO_NAME} to ${dest_addr} with --mirror flag"
