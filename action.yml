@@ -13,11 +13,11 @@ inputs:
     require: true
     default: "https"
   source_host:
-    description: "Git host without the protocol"
+    description: "Git server host without the protocol"
     required: true
     default: "github.com"
   source_port:
-    description: "Git port"
+    description: "Git server port"
     required: false
   source_username:
     description: "Username on source git server"
@@ -36,11 +36,11 @@ inputs:
     require: true
     default: "https"
   dest_host:
-    description: "Git host without the protocol"
+    description: "Git server host without the protocol"
     required: true
     default: "github.com"
   dest_port:
-    description: "Git port"
+    description: "Git server port"
     required: false
   dest_username:
     description: "Username on dest git server"
@@ -100,4 +100,4 @@ inputs:
     default: "false"
 runs:
   using: "docker"
-  image: "docker://ghcr.io/k8scat/mirror-git:0.0.21"
+  image: "docker://ghcr.io/k8scat/mirror-git:0.0.22"

@@ -2,60 +2,78 @@
 # Created by K8sCat <k8scat@gmail.com>
 set +e
 
-for f in /mirror-git/functions/*; do
-  source "${f}"
-done
+function init() {
+  for f in /mirror-git/functions/*; do
+    # shellcheck disable=SC1090
+    source "${f}"
+  done
 
-WORKDIR="/tmp/repos"
+  WORKDIR="/data/repos"
+  mkdir -p ${WORKDIR}
+  cd ${WORKDIR} || exit 1
 
-mkdir -p ${WORKDIR}
-cd ${WORKDIR} || exit 1
+  export INPUT_SOURCE_PORT="${INPUT_SOURCE_PORT:-22}"
+  export INPUT_SOURCE_TOKEN_USERNAME="${INPUT_SOURCE_TOKEN_USERNAME:-${INPUT_SOURCE_USERNAME}}"
+  export INPUT_SOURCE_PROTOCOL="${INPUT_SOURCE_PROTOCOL:-https}"
+  export INPUT_SOURCE_HOST="${INPUT_SOURCE_HOST:-github.com}"
+  export INPUT_DEST_PORT="${INPUT_DEST_PORT:-22}"
+  export INPUT_DEST_TOKEN_USERNAME="${INPUT_DEST_TOKEN_USERNAME:-${INPUT_DEST_USERNAME}}"
+  export INPUT_DEST_PROTOCOL="${INPUT_DEST_PROTOCOL:-https}"
+  export INPUT_DEST_HOST="${INPUT_DEST_HOST:-github.com}"
+  export INPUT_PUSH_TAGS="${INPUT_PUSH_TAGS:-true}"
+  export INPUT_FORCE_PUSH="${INPUT_FORCE_PUSH:-false}"
+  export INPUT_NOTIFY_PREFIX="${INPUT_NOTIFY_PREFIX:-Mirror Git}"
+  export INPUT_NOTIFY_SUFFIX="${INPUT_NOTIFY_SUFFIX:-Powered by https://github.com/k8scat/action-mirror-git}"
+  export INPUT_ENABLE_GIT_LFS="${INPUT_ENABLE_GIT_LFS:-false}"
+}
 
-SSH_DIR="${HOME}/.ssh"
-mkdir -p "${SSH_DIR}"
-chmod 0700 "${SSH_DIR}"
-
-if [[ -z "${INPUT_SOURCE_TOKEN_USERNAME}" ]]; then
-  export INPUT_SOURCE_TOKEN_USERNAME="${INPUT_SOURCE_USERNAME}"
-fi
-if [[ -z "${INPUT_DEST_TOKEN_USERNAME}" ]]; then
-  export INPUT_DEST_TOKEN_USERNAME="${INPUT_DEST_USERNAME}"
-fi
-
-# create_repo
-if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
-  if [[ $(echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ "http".*"://".* ]]; then
-    if ! curl -L "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /usr/bin/create_repo; then
-      exit 1
-    fi
-  else
-    echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /usr/bin/create_repo
+function init_token_username() {
+  if [[ -z "${INPUT_SOURCE_TOKEN_USERNAME}" ]]; then
+    export INPUT_SOURCE_TOKEN_USERNAME="${INPUT_SOURCE_USERNAME}"
   fi
-  chmod +x /usr/bin/create_repo
-fi
-
-# delete_repo
-if [[ -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" ]]; then
-  if [[ $(echo "${INPUT_DEST_DELETE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ "http".*"://".* ]]; then
-    if ! curl -L -k "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /usr/bin/delete_repo; then
-      exit 1
-    fi
-  else
-    echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /usr/bin/delete_repo
+  if [[ -z "${INPUT_DEST_TOKEN_USERNAME}" ]]; then
+    export INPUT_DEST_TOKEN_USERNAME="${INPUT_DEST_USERNAME}"
   fi
-  chmod +x /usr/bin/delete_repo
-fi
+}
+
+function init_scripts() {
+  # create_repo
+  if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
+    if [[ $(echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ "http".*"://".* ]]; then
+      if ! curl -L "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /usr/bin/create_repo; then
+        exit 1
+      fi
+    else
+      echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /usr/bin/create_repo
+    fi
+    chmod +x /usr/bin/create_repo
+  fi
+
+  # delete_repo
+  if [[ -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" ]]; then
+    if [[ $(echo "${INPUT_DEST_DELETE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ "http".*"://".* ]]; then
+      if ! curl -L -k "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /usr/bin/delete_repo; then
+        exit 1
+      fi
+    else
+      echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /usr/bin/delete_repo
+    fi
+    chmod +x /usr/bin/delete_repo
+  fi
+}
 
 # message
-if [[ -n "${INPUT_SLACK_WEBHOOK}" ]]; then
-  export SLACK_WEBHOOK="${INPUT_SLACK_WEBHOOK}"
-fi
-if [[ -n "${INPUT_DINGTALK_WEBHOOK}" ]]; then
-  export DINGTALK_WEBHOOK="${INPUT_DINGTALK_WEBHOOK}"
-fi
-if [[ -n "${INPUT_LARK_WEBHOOK}" ]]; then
-  export LARK_WEBHOOK="${INPUT_LARK_WEBHOOK}"
-fi
+function init_message() {
+  if [[ -n "${INPUT_SLACK_WEBHOOK}" ]]; then
+    export SLACK_WEBHOOK="${INPUT_SLACK_WEBHOOK}"
+  fi
+  if [[ -n "${INPUT_DINGTALK_WEBHOOK}" ]]; then
+    export DINGTALK_WEBHOOK="${INPUT_DINGTALK_WEBHOOK}"
+  fi
+  if [[ -n "${INPUT_LARK_WEBHOOK}" ]]; then
+    export LARK_WEBHOOK="${INPUT_LARK_WEBHOOK}"
+  fi
+}
 
 function notify() {
   local msg="${1}"
@@ -108,18 +126,63 @@ EOF
   echo "${new_host}"
 }
 
-if [[ "${INPUT_SOURCE_PROTOCOL}" = "ssh" ]]; then
-  INPUT_SOURCE_HOST=$(write_ssh_config "source" "${INPUT_SOURCE_HOST}" "${INPUT_SOURCE_PORT}" "${INPUT_SOURCE_USERNAME}" "${INPUT_SOURCE_PRIVATE_KEY}")
-  export INPUT_SOURCE_HOST
-fi
-if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
-  INPUT_DEST_HOST=$(write_ssh_config "dest" "${INPUT_DEST_HOST}" "${INPUT_DEST_PORT}" "${INPUT_DEST_USERNAME}" "${INPUT_DEST_PRIVATE_KEY}")
-  export INPUT_DEST_HOST
-fi
+function init_ssh() {
+  SSH_DIR="${HOME}/.ssh"
+  mkdir -p "${SSH_DIR}"
+  chmod 0700 "${SSH_DIR}"
+
+  if [[ "${INPUT_SOURCE_PROTOCOL}" = "ssh" ]]; then
+    INPUT_SOURCE_HOST=$(write_ssh_config "source" "${INPUT_SOURCE_HOST}" "${INPUT_SOURCE_PORT}" "${INPUT_SOURCE_USERNAME}" "${INPUT_SOURCE_PRIVATE_KEY}")
+    export INPUT_SOURCE_HOST
+  fi
+  if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
+    INPUT_DEST_HOST=$(write_ssh_config "dest" "${INPUT_DEST_HOST}" "${INPUT_DEST_PORT}" "${INPUT_DEST_USERNAME}" "${INPUT_DEST_PRIVATE_KEY}")
+    export INPUT_DEST_HOST
+  fi
+}
+
+function gen_source_addr() {
+  if [[ "${INPUT_SOURCE_PROTOCOL}" = "ssh" ]]; then
+    source_addr="git@${INPUT_SOURCE_HOST}:${INPUT_SOURCE_USERNAME}/${REPO_NAME}.git"
+    echo "${source_addr}"
+    return
+  fi
+  if [[ "${INPUT_SOURCE_PROTOCOL}" = "https" ]]; then
+    source_addr="https://${INPUT_SOURCE_TOKEN_USERNAME}:${INPUT_SOURCE_TOKEN}@${INPUT_SOURCE_HOST}"
+    if [[ -n "${INPUT_SOURCE_PORT}" ]]; then
+      source_addr="${source_addr}:${INPUT_SOURCE_PORT}"
+    fi
+    source_addr="${source_addr}/${INPUT_SOURCE_USERNAME}/${REPO_NAME}.git"
+    echo "${source_addr}"
+    return
+  fi
+  notify "Unknown source protocol: ${INPUT_SOURCE_PROTOCOL}"
+  return 0
+}
+
+function gen_dest_addr() {
+  if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
+    dest_addr="git@${INPUT_DEST_HOST}:${INPUT_DEST_USERNAME}/${REPO_NAME}.git"
+    echo "${dest_addr}"
+    return
+  fi
+  if [[ "${INPUT_DEST_PROTOCOL}" = "https" ]]; then
+    dest_addr="https://${INPUT_DEST_TOKEN_USERNAME}:${INPUT_DEST_TOKEN}@${INPUT_DEST_HOST}"
+    if [[ -n "${INPUT_DEST_PORT}" ]]; then
+      dest_addr="${dest_addr}:${INPUT_DEST_PORT}"
+    fi
+    dest_addr="${dest_addr}/${INPUT_DEST_USERNAME}/${REPO_NAME}.git"
+    echo "${dest_addr}"
+    return
+  fi
+  notify "Unknown dest protocol: ${INPUT_DEST_PROTOCOL}"
+  return 0
+}
 
 function mirror() {
   IFS=","
   for repo_name in ${INPUT_MIRROR_REPOS}; do
+    # shellcheck disable=SC2076
     if [[ "${INPUT_IGNORED_REPOS}" =~ "${repo_name}" ]]; then
       continue
     fi
@@ -127,51 +190,33 @@ function mirror() {
 
     cd ${WORKDIR} || return 1
 
-    if [[ "${INPUT_SOURCE_PROTOCOL}" = "ssh" ]]; then
-      source_addr="git@${INPUT_SOURCE_HOST}:${INPUT_SOURCE_USERNAME}/${repo_name}.git"
-    elif [[ "${INPUT_SOURCE_PROTOCOL}" = "https" ]]; then
-      source_addr="https://${INPUT_SOURCE_TOKEN_USERNAME}:${INPUT_SOURCE_TOKEN}@${INPUT_SOURCE_HOST}"
-      if [[ -n "${INPUT_SOURCE_PORT}" ]]; then
-        source_addr="${source_addr}:${INPUT_SOURCE_PORT}"
-      fi
-      source_addr="${source_addr}/${INPUT_SOURCE_USERNAME}/${repo_name}.git"
-    else
-      notify "Unknown source protocol: ${INPUT_SOURCE_PROTOCOL}"
-      return 1
-    fi
+    source_addr=$(gen_source_addr)
     echo "source_addr: ${source_addr}"
 
-    if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
-      dest_addr="git@${INPUT_DEST_HOST}:${INPUT_DEST_USERNAME}/${repo_name}.git"
-    elif [[ "${INPUT_DEST_PROTOCOL}" = "https" ]]; then
-      dest_addr="https://${INPUT_DEST_TOKEN_USERNAME}:${INPUT_DEST_TOKEN}@${INPUT_DEST_HOST}"
-      if [[ -n "${INPUT_DEST_PORT}" ]]; then
-        dest_addr="${dest_addr}:${INPUT_DEST_PORT}"
-      fi
-      dest_addr="${dest_addr}/${INPUT_DEST_USERNAME}/${repo_name}.git"
-    else
-      notify "Unknown source protocol: ${INPUT_DEST_PROTOCOL}"
-      return 1
-    fi
+    dest_addr=$(gen_dest_addr)
     echo "dest_addr: ${dest_addr}"
 
-    if ! git clone --bare "${source_addr}" "${repo_name}"; then
+    if ! git clone --bare "${source_addr}" "${REPO_NAME}"; then
       notify "Failed to clone ${source_addr}"
       return 1
     fi
 
     if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
-      create_repo || return 1
+      if ! create_repo; then
+        notify "Failed to create repo: ${REPO_NAME}"
+        return 1
+      fi
     fi
 
-    repo_dir="${WORKDIR}/${repo_name}"
+    repo_dir="${WORKDIR}/${REPO_NAME}"
     cd "${repo_dir}" || exit 1
-    if [[ "${INPUT_PUSH_TAGS}" = "false" || "${INPUT_SKIP_TAGS_REPOS}" =~ "${repo_name}" ]]; then
+    # shellcheck disable=SC2076
+    if [[ "${INPUT_PUSH_TAGS}" = "false" || "${INPUT_SKIP_TAGS_REPOS}" =~ "${REPO_NAME}" ]]; then
       if ! git push --all -f "${dest_addr}"; then
-        notify "Failed to push ${repo_name} to ${dest_addr} with --all flag"
+        notify "Failed to push ${REPO_NAME} to ${dest_addr} with --all flag"
         if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" && -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
           if ! delete_repo; then
-            notify "Failed to delete repo: ${repo_name}"
+            notify "Failed to delete repo: ${REPO_NAME}"
             return 1
           fi
           create_repo || return 1
@@ -182,10 +227,10 @@ function mirror() {
       fi
     else
       if ! git push --mirror -f "${dest_addr}"; then
-        notify "Failed to push ${repo_name} to ${dest_addr} with --mirror flag"
+        notify "Failed to push ${REPO_NAME} to ${dest_addr} with --mirror flag"
         if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" && -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
           if ! delete_repo; then
-            notify "Failed to delete repo: ${repo_name}"
+            notify "Failed to delete repo: ${REPO_NAME}"
             return 1
           fi
           create_repo || return 1
@@ -197,7 +242,7 @@ function mirror() {
     fi
 
     if [[ "${INPUT_ENABLE_GIT_LFS}" = "true" ]]; then
-      cd "${repo_name}" || return 1
+      cd "${REPO_NAME}" || return 1
       git lfs fetch --all
       git lfs push --all "${dest_addr}"
     fi
@@ -205,6 +250,12 @@ function mirror() {
 }
 
 function main() {
+  init
+  init_token_username
+  init_scripts
+  init_message
+  init_ssh
+
   notify "Mirror Git starting"
   if mirror; then
     notify "Mirror Git finished"
