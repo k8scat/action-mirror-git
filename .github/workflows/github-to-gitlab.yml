@@ -20,7 +20,7 @@ jobs:
           python -V
           pip -V
           pip install requests
-          python unprotect_branches.py k8scat ${DEST_TOKEN}
+          python unprotect_branches.py k8scat ${{ secrets.DEST_TOKEN_GITLAB }}
 
       - name: Login Source GitHub
         run: |

@@ -26,7 +26,7 @@ def unprotect_branches(user, token):
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print('usage: python unprotect_branches.py user token')
+        print('usage: python unprotect_branches.py <user> <token>')
         sys.exit(1)
     user = sys.argv[1]
     token = sys.argv[2]
