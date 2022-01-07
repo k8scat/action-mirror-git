@@ -1,4 +1,4 @@
-name: Mirror Git
+name: GitHub Org to Gitee Org
 
 on:
   workflow_dispatch:
