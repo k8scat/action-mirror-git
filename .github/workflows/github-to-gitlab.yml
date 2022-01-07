@@ -1,0 +1,52 @@
+name: GitHub to GitLab
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 3"
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # https://github.com/actions/setup-python
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.6.8"
+      - name: Unprotect branches
+        run: |
+          python -V
+          pip -V
+          pip install requests
+          python unprotect_branches.py k8scat ${DEST_TOKEN}
+
+      - name: Login Source GitHub
+        run: |
+          gh --version
+          echo "${{ secrets.SOURCE_TOKEN }}" | gh auth login --with-token
+          gh auth status
+
+      - name: List repos
+        id: list_repos
+        run: |
+          repo_list=$(gh repo list -L 1000 --json name -t '{{range $i, $n := .}}{{if (gt $i 0)}},{{end}}{{$n.name}}{{end}}')
+          echo "::set-output name=repo_list::${repo_list}"
+
+      - name: Mirror Git
+        uses: k8scat/action-mirror-git@v0.0.27
+        with:
+          source_protocol: https
+          source_host: github.com
+          source_username: k8scat
+          source_token: ${{ secrets.SOURCE_TOKEN }}
+          dest_protocol: https
+          dest_host: gitlab.com
+          dest_username: k8scat
+          dest_token: ${{ secrets.DEST_TOKEN_GITLAB }}
+          push_tags: "true"
+          mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
+          lark_webhook: ${{ secrets.LARK_WEBHOOK }}
+          notify_prefix: "GitHub to GitLab"
+          ignore_error: "true"

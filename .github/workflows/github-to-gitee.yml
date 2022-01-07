@@ -1,0 +1,52 @@
+name: Mirror Git
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 3"
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Login Source GitHub
+        run: |
+          gh --version
+          echo "${{ secrets.SOURCE_TOKEN }}" | gh auth login --with-token
+          gh auth status
+
+      - name: List repos
+        id: list_repos
+        run: |
+          repo_list=$(gh repo list -L 1000 --json name -t '{{range $i, $n := .}}{{if (gt $i 0)}},{{end}}{{$n.name}}{{end}}')
+          echo "::set-output name=repo_list::${repo_list}"
+
+      - name: Mirror Git
+        uses: k8scat/action-mirror-git@v0.0.27
+        with:
+          source_protocol: https
+          source_host: github.com
+          source_username: k8scat
+          source_token: ${{ secrets.SOURCE_TOKEN }}
+          dest_protocol: https
+          dest_host: gitee.com
+          dest_username: k8scat
+          dest_token: ${{ secrets.DEST_TOKEN_GITEE }}
+          push_tags: "true"
+          mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
+          ignored_repos: "Gigrator"
+          dest_create_repo_script: |
+            curl \
+              -H 'Content-Type: application/json;charset=UTF-8' \
+              -d "{\"access_token\":\"${INPUT_DEST_TOKEN}\",\"name\":\"${REPO_NAME}\",\"private\":\"true\"}" \
+              'https://gitee.com/api/v5/user/repos'
+          dest_delete_repo_script: |
+            curl \
+              -X DELETE \
+              -H 'Content-Type: application/json;charset=UTF-8' \
+              "https://gitee.com/api/v5/repos/${INPUT_DEST_USERNAME}/${REPO_NAME}?access_token=${INPUT_DEST_TOKEN}"
+          lark_webhook: ${{ secrets.LARK_WEBHOOK }}
+          notify_prefix: "GitHub to Gitee"
+          force_push: "true"

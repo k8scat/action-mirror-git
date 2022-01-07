@@ -81,18 +81,17 @@ skip_tags_repos: "repo3,repo4"
 ```yaml
 # Custom script to create repository
 dest_create_repo_script: |
-  # create repo via github cli
   if ! gh auth status; then
-    token_file="/tmp/.github_token"
-    echo "${INPUT_DEST_TOKEN}" > "${token_file}"
-    gh auth login --with-token < "${token_file}"
+    echo "${INPUT_DEST_TOKEN}" | gh auth login --with-token
     gh auth status
   fi
   repo="${INPUT_DEST_USERNAME}/${REPO_NAME}"
-  found=$(gh repo list ${{ secrets.SOURCE_USERNAME }} -L 1000 | grep -i "${repo}")
-  if [[ -z "${found}" ]]; then
-    gh repo create "${INPUT_DEST_USERNAME}/${REPO_NAME}" --private
+  found=$(gh repo list ${INPUT_DEST_USERNAME} -L 1000 --json name -t "{{range .}}{{if (eq .name \"${REPO_NAME}\")}}{{.name}}{{end}}{{end}}")
+  if [[ -n "${found}" ]]; then
+    echo "repo ${REPO_NAME} already exists"
+    exit 0
   fi
+  gh repo create "${INPUT_DEST_USERNAME}/${REPO_NAME}" --private
 
 # Specify the script url to create repository
 dest_create_repo_script: https://example.com/create_repo.sh
@@ -118,24 +117,19 @@ lark_webhook: ${{ secrets.LARK_WEBHOOK }}
 ```yaml
 force_push: "true"
 dest_delete_repo_script: |
-  # delete repo via github cli
   if ! gh auth status; then
-    token_file="/tmp/.github_token"
-    echo "${INPUT_DEST_TOKEN}" > "${token_file}"
-    gh auth login --with-token < "${token_file}"
+    echo "${INPUT_DEST_TOKEN}" | gh auth login --with-token
     gh auth status
   fi
   gh repo delete "${INPUT_DEST_USERNAME}/${REPO_NAME}" --confirm
 ```
 
-## Example
+## Examples
 
-[workflows/example.yml](./.github/workflows/example.yml)
-
-## Use cases
-
-- [Sync all repos from GitHub Organization to Gitee Organization](https://github.com/huayin-opensource/gitee-mirror)
-- [Sync all repos from GitHub Personal to Gitee Personal](https://github.com/k8scat/gitee-mirror)
+- [GitHub Org to Gitee Org](./.github/workflows/github-org-to-gitee-org.yml)
+- [GitHub to Gitee](./.github/workflows/github-to-gitee.yml)
+- [GitHub to GitHub](./.github/workflows/github-to-github.yml)
+- [GitHub to GitLab](./.github/workflows/github-to-gitlab.yml)
 
 ## Run
 
