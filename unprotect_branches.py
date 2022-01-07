@@ -17,7 +17,6 @@ def unprotect_branches(user, token):
         if len(protected_branches) == 0:
             print(f'{project_name} has no protected branches')
             continue
-        print(f'found protected branches in project[{project_name}]: {",".join(protected_branches)}')
         for branch in protected_branches:
             branch_name = branch['name']
             print(f'unprotect branch: {project_name}/{branch_name}')
