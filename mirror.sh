@@ -26,7 +26,6 @@ function init_env() {
   export INPUT_FORCE_PUSH="${INPUT_FORCE_PUSH:-false}"
   export INPUT_NOTIFY_PREFIX="${INPUT_NOTIFY_PREFIX:-Mirror Git}"
   export INPUT_NOTIFY_SUFFIX="${INPUT_NOTIFY_SUFFIX:-Powered by https://github.com/k8scat/action-mirror-git}"
-  export INPUT_ENABLE_GIT_LFS="${INPUT_ENABLE_GIT_LFS:-false}"
   export INPUT_IGNORE_ERROR="${INPUT_IGNORE_ERROR:-false}"
 }
 
@@ -286,24 +285,6 @@ function mirror() {
             return 1
           fi
         fi
-      fi
-    fi
-
-    if [[ "${INPUT_ENABLE_GIT_LFS}" = "true" ]]; then
-      cd "${REPO_NAME}" || return 1
-      if ! git lfs fetch --all; then
-        notify "Failed to fetch lfs for ${REPO_NAME}"
-        if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
-          continue
-        fi
-        return 1
-      fi
-      if ! git lfs push --all "${dest_addr}"; then
-        notify "Failed to push lfs for ${dest_addr}"
-        if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
-          continue
-        fi
-        return 1
       fi
     fi
   done

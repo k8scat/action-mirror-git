@@ -6,7 +6,7 @@ Synchronize git repositories like a mirror.
 
 - [x] Any git server like GitHub, GitLab, BitBucket, Gitee etc.
 - [x] Protocol under HTTPS and SSH
-- [x] Sync branches, tags, commits, even Git LFS objects
+- [x] Sync branches, tags, commits
 - [x] Ignore specific repositories
 - [x] Specify repositories without pushing tags
 - [x] Auto create repository on the dest git server with custom script
@@ -48,16 +48,13 @@ dest_private_key: |
   -----END OPENSSH PRIVATE KEY-----
 ```
 
-### Sync branches, tags, commits, even Git LFS objects
+### Sync branches, tags, commits
 
 ```yaml
 # Branch and commits will be synced by default
 
 # Sync tags
 push_tags: "true"
-
-# Sync Git LFS objects
-enable_git_lfs: "true"
 ```
 
 Refer to [Duplicating a repository](https://docs.github.com/cn/repositories/creating-and-managing-repositories/duplicating-a-repository).
@@ -160,7 +157,7 @@ docker run \
   -e INPUT_FORCE_PUSH="false" \
   -e INPUT_NOTIFY_PREFIX="Mirror Git" \
   -e INPUT_NOTIFY_SUFFIX="Powered by https://github.com/k8scat/action-mirror-git" \
-  gigrator/mirror-git:0.0.27
+  gigrator/mirror-git:0.0.28
 ```
 
 ## LICENSE
