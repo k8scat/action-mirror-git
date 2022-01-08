@@ -1,4 +1,4 @@
-name: GitHub to Gitee
+name: GitHub to Gitea
 
 on:
   workflow_dispatch:

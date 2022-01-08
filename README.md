@@ -128,7 +128,7 @@ dest_delete_repo_script: |
 - [GitHub to GitHub](./.github/workflows/github-to-github.yml)
 - [GitHub to GitLab](./.github/workflows/github-to-gitlab.yml)
 - [GitHub to BitBucket](./.github/workflows/github-to-bitbucket.yml)
-- [GitHub to Gitea]
+- [GitHub to Gitea](./.github/workflows/github-to-gitea.yml)
 
 ## Run
 
