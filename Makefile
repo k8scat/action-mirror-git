@@ -1,6 +1,6 @@
 os = $(shell uname -s)
 
-version = 0.0.28
+version = 0.1.0
 image = mirror-git:$(version)
 
 cr_user = gigrator
@@ -46,9 +46,19 @@ ifeq ($(os),Darwin)
 	sed -i "" 's/$(version)/$(new_version)/g' action.yml
 	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/example.yml
 	sed -i "" 's/$(version)/$(new_version)/g' README.md
+	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-to-github.yml
+	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-to-gitee.yml
+	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-to-gitlab.yml
+	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-to-bitbucket.yml
+	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-org-to-gitee-org.yml
 else
 	sed -i 's/$(version)/$(new_version)/g' Makefile
 	sed -i 's/$(version)/$(new_version)/g' action.yml
 	sed -i 's/$(version)/$(new_version)/g' .github/workflows/example.yml
 	sed -i 's/$(version)/$(new_version)/g' README.md
+	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-to-github.yml
+	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-to-gitee.yml
+	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-to-gitlab.yml
+	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-to-bitbucket.yml
+	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-org-to-gitee-org.yml
 endif
