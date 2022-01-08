@@ -23,7 +23,7 @@ jobs:
           repo_list=$(gh repo list k8scat -L 1000 --json name -t '{{range $i, $n := .}}{{if (gt $i 0)}},{{end}}{{$n.name}}{{end}}')
           echo "::set-output name=repo_list::${repo_list}"
 
-      - name: Mirror Git
+      - name: GitHub to BitBucket
         uses: k8scat/action-mirror-git@v0.1.0
         with:
           source_protocol: https

@@ -199,9 +199,6 @@ function mirror() {
     source_addr=$(gen_source_addr)
     echo "source_addr: ${source_addr}"
 
-    dest_addr=$(gen_dest_addr)
-    echo "dest_addr: ${dest_addr}"
-
     if ! git clone --bare "${source_addr}" "${REPO_NAME}"; then
       notify "Failed to clone ${source_addr}"
       if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
@@ -220,6 +217,9 @@ function mirror() {
         return 1
       fi
     fi
+
+    dest_addr=$(gen_dest_addr)
+    echo "dest_addr: ${dest_addr}"
 
     repo_dir="${WORKDIR}/${REPO_NAME}"
     cd "${repo_dir}" || exit 1
