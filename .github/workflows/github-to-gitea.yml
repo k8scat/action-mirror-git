@@ -31,7 +31,7 @@ jobs:
           source_username: k8scat
           source_token: ${{ secrets.SOURCE_TOKEN }}
           dest_protocol: https
-          dest_host: gitee.com
+          dest_host: gitea.com
           dest_username: k8scat
           dest_token: ${{ secrets.DEST_TOKEN_GITEA }}
           push_tags: "true"
