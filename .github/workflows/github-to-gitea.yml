@@ -2,8 +2,8 @@ name: GitHub to Gitea
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 2 * * 3"
+  # schedule:
+  #   - cron: "0 2 * * 3"
 
 jobs:
   mirror:
@@ -43,6 +43,7 @@ jobs:
               -H "Authorization: token ${INPUT_DEST_TOKEN}" \
               -d "{\"name\":\"${REPO_NAME}\",\"private\":true}" \
               'https://gitea.com/api/v1/user/repos'
+          ignore_error: "true"
           dest_delete_repo_script: |
             curl \
               -X DELETE \

@@ -2,6 +2,16 @@
 
 Synchronize git repositories like a mirror.
 
+## Examples
+
+- [GitHub Org to Gitee Org](./.github/workflows/github-org-to-gitee-org.yml)
+- [GitHub to Gitee](./.github/workflows/github-to-gitee.yml)
+- [GitHub to GitHub](./.github/workflows/github-to-github.yml)
+- [GitHub to GitLab](./.github/workflows/github-to-gitlab.yml)
+- [GitHub to BitBucket](./.github/workflows/github-to-bitbucket.yml)
+- [GitHub to Gitea](./.github/workflows/github-to-gitea.yml)
+- [GitHub to Coding](./.github/workflows/github-to-coding.yml)
+
 ## Support
 
 - [x] Any git server like GitHub, GitLab, BitBucket, Gitee etc.
@@ -120,15 +130,6 @@ dest_delete_repo_script: |
   fi
   gh repo delete "${INPUT_DEST_USERNAME}/${REPO_NAME}" --confirm
 ```
-
-## Examples
-
-- [GitHub Org to Gitee Org](./.github/workflows/github-org-to-gitee-org.yml)
-- [GitHub to Gitee](./.github/workflows/github-to-gitee.yml)
-- [GitHub to GitHub](./.github/workflows/github-to-github.yml)
-- [GitHub to GitLab](./.github/workflows/github-to-gitlab.yml)
-- [GitHub to BitBucket](./.github/workflows/github-to-bitbucket.yml)
-- [GitHub to Gitea](./.github/workflows/github-to-gitea.yml)
 
 ## Run
 

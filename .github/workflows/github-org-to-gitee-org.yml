@@ -50,3 +50,4 @@ jobs:
           lark_webhook: ${{ secrets.LARK_WEBHOOK }}
           notify_prefix: "GitHub Org to Gitee Org"
           force_push: "true"
+          ignore_error: "true"
