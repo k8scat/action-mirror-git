@@ -40,19 +40,19 @@ jobs:
           push_tags: "true"
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
           dest_create_repo_script: |
-            curl \
+            curl -k \
               -H 'Content-Type: application/json' \
               -d "{\"Action\":\"CreateGitDepot\",\"ProjectId\":${{ secrets.CODING_PROJECT_ID }},\"DepotName\":\"${REPO_NAME}\"}" \
               https://e.coding.net/open-api
           force_push: "true"
           dest_delete_repo_script: |
-            depot_id=$(curl \
+            depot_id=$(curl -k \
               -H 'Content-Type: application/json' \
               -H 'Authorization: token ${INPUT_DEST_TOKEN}' \
               -d "{"Action":"DescribeProjectDepotInfoList","ProjectId": 9853957}" \
               'https://e.coding.net/open-api' | \
               jq ".Response | .DepotData | .Depots | .[] | select(.Name == \"${REPO_NAME}\") | .Id")
-            curl \
+            curl -k \
               -H 'Content-Type: application/json' \
               -d "{\"Action\":\"DeleteGitDepot\",\"DepotId\":${depot_id}}' \
               'https://e.coding.net/open-api'
