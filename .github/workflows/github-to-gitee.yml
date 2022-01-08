@@ -2,8 +2,8 @@ name: GitHub to Gitee
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 2 * * 3"
+  # schedule:
+  #   - cron: "0 2 * * 3"
 
 jobs:
   mirror:
