@@ -50,6 +50,8 @@ ifeq ($(os),Darwin)
 	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-to-gitlab.yml
 	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-to-bitbucket.yml
 	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-org-to-gitee-org.yml
+	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-to-gitea.yml
+	sed -i "" 's/$(version)/$(new_version)/g' .github/workflows/github-to-coding.yml
 else
 	sed -i 's/$(version)/$(new_version)/g' Makefile
 	sed -i 's/$(version)/$(new_version)/g' action.yml
@@ -59,4 +61,6 @@ else
 	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-to-gitlab.yml
 	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-to-bitbucket.yml
 	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-org-to-gitee-org.yml
+	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-to-gitea.yml
+	sed -i 's/$(version)/$(new_version)/g' .github/workflows/github-to-coding.yml
 endif
