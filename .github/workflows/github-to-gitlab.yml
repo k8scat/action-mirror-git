@@ -50,6 +50,10 @@ jobs:
           notify_prefix: "GitHub to GitLab"
           ignore_error: "true"
           dest_create_repo_script: |
+            # load functions: gitlab_update_project, gitlab_create_project, urlencode
+            source /mirror-git/functions/url.sh
+            source /mirror-git/functions/gitlab.sh
+
             result=$(gitlab_update_project ${INPUT_DEST_TOKEN} $(urlencode ${INPUT_DEST_USERNAME}/${REPO_NAME}) "{\"lfs_enabled\":false}")
             if [[ "${result}" = "404" ]]; then
               result=$(gitlab_create_project ${INPUT_DEST_TOKEN} "{\"name\":\"${REPO_NAME}\",\"lfs_enabled\":false}")
