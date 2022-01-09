@@ -129,10 +129,10 @@ docker run \
   -e INPUT_DEST_HOST="github.com" \
   -e INPUT_DEST_USERNAME="dest_user" \
   -e INPUT_DEST_PRIVATE_KEY="xxx" \
-  -e INPUT_PUSH_TAGS="true" \
+  -e INPUT_PUSH_TAGS="false" \
   -e INPUT_MIRROR_REPOS="repo1,repo2,repo3" \
-  -e INPUT_IGNORED_REPOS="repo1" \
-  -e INPUT_SKIP_TAGS_REPOS="repo2" \
+  -e INPUT_IGNORED_REPOS=",repo1," \
+  -e INPUT_SKIP_TAGS_REPOS=",repo2," \
   -e INPUT_DEST_CREATE_REPO_SCRIPT="xxx" \
   -e INPUT_SOURCE_PORT \
   -e INPUT_SOURCE_PRIVATE_KEY \

@@ -35,7 +35,7 @@ jobs:
           dest_username: k8scat
           dest_token: ${{ secrets.DEST_TOKEN_GITEA }}
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
-          ignored_repos: "Gigrator"
+          ignored_repos: ",Gigrator,"
           dest_create_repo_script: |
             curl \
               -H 'Content-Type: application/json' \
