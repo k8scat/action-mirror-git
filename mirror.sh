@@ -23,7 +23,6 @@ function init_env() {
   export INPUT_DEST_PROTOCOL="${INPUT_DEST_PROTOCOL:-https}"
   export INPUT_DEST_HOST="${INPUT_DEST_HOST:-github.com}"
   export INPUT_PUSH_TAGS="${INPUT_PUSH_TAGS:-true}"
-  export INPUT_FORCE_PUSH="${INPUT_FORCE_PUSH:-false}"
   export INPUT_NOTIFY_PREFIX="${INPUT_NOTIFY_PREFIX:-Mirror Git}"
   export INPUT_NOTIFY_SUFFIX="${INPUT_NOTIFY_SUFFIX:-Powered by https://github.com/k8scat/action-mirror-git}"
   export INPUT_IGNORE_ERROR="${INPUT_IGNORE_ERROR:-false}"
@@ -47,24 +46,13 @@ function init_scripts() {
   if [[ -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
     if [[ $(echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ "http".*"://".* ]]; then
       if ! curl -L "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /usr/bin/create_repo; then
+        notify "Download create_repo script failed"
         exit 1
       fi
     else
       echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /usr/bin/create_repo
     fi
     chmod +x /usr/bin/create_repo
-  fi
-
-  # delete_repo
-  if [[ -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" ]]; then
-    if [[ $(echo "${INPUT_DEST_DELETE_REPO_SCRIPT}" | wc -l) -eq 1 && "${INPUT_DEST_CREATE_REPO_SCRIPT}" =~ "http".*"://".* ]]; then
-      if ! curl -L -k "${INPUT_DEST_CREATE_REPO_SCRIPT}" -o /usr/bin/delete_repo; then
-        exit 1
-      fi
-    else
-      echo "${INPUT_DEST_CREATE_REPO_SCRIPT}" > /usr/bin/delete_repo
-    fi
-    chmod +x /usr/bin/delete_repo
   fi
 }
 
@@ -163,7 +151,7 @@ function gen_source_addr() {
     return
   fi
   notify "Unknown source protocol: ${INPUT_SOURCE_PROTOCOL}"
-  return 0
+  return 1
 }
 
 function gen_dest_addr() {
@@ -182,25 +170,27 @@ function gen_dest_addr() {
     return
   fi
   notify "Unknown dest protocol: ${INPUT_DEST_PROTOCOL}"
-  return 0
+  return 1
 }
 
 function mirror() {
   IFS=","
   for repo_name in ${INPUT_MIRROR_REPOS}; do
     # shellcheck disable=SC2076
-    if [[ "${INPUT_IGNORED_REPOS}" =~ "${repo_name}" ]]; then
+    if [[ "${INPUT_IGNORED_REPOS}" =~ ",${repo_name}," ]]; then
       continue
     fi
     export REPO_NAME="${repo_name}"
 
     cd ${WORKDIR} || return 1
 
-    source_addr=$(gen_source_addr)
+    if ! source_addr=$(gen_source_addr); then
+      exit 1
+    fi
     echo "source_addr: ${source_addr}"
 
     if ! git clone --bare "${source_addr}" "${REPO_NAME}"; then
-      notify "Failed to clone ${source_addr}"
+      notify "Failed to clone repo: ${source_addr}"
       if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
         continue
       fi
@@ -218,46 +208,25 @@ function mirror() {
       fi
     fi
 
-    dest_addr=$(gen_dest_addr)
+    if ! dest_addr=$(gen_dest_addr); then
+      exit 1
+    fi
     echo "dest_addr: ${dest_addr}"
 
     repo_dir="${WORKDIR}/${REPO_NAME}"
     cd "${repo_dir}" || exit 1
     if ! git push --all -f "${dest_addr}"; then
-      notify "Failed to push ${REPO_NAME} to ${dest_addr} with --all flag"
-      if [[ "${INPUT_FORCE_PUSH}" = "true" && -n "${INPUT_DEST_DELETE_REPO_SCRIPT}" && -n "${INPUT_DEST_CREATE_REPO_SCRIPT}" ]]; then
-        echo "Deleting repo: ${REPO_NAME}"
-        if ! delete_repo; then
-          notify "Failed to delete repo: ${REPO_NAME}"
-          if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
-            continue
-          fi
-          return 1
-        fi
-
-        echo "Creating repo: ${REPO_NAME}"
-        if ! create_repo; then
-          notify "Failed to create repo: ${REPO_NAME}"
-          if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
-            continue
-          fi
-          return 1
-        fi
-
-        if ! git push --all -f "${dest_addr}"; then
-          notify "Still failed to push ${REPO_NAME} to ${dest_addr} with --all flag"
-          if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
-            continue
-          fi
-          return 1
-        fi
+      notify "Failed to push branches: ${dest_addr}"
+      if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
+        continue
       fi
+      return 1
     fi
 
     # shellcheck disable=SC2076
-    if [[ "${INPUT_PUSH_TAGS}" = "true" && ! "${INPUT_SKIP_TAGS_REPOS}" =~ "${REPO_NAME}" ]]; then
-      if ! git push --mirror -f "${dest_addr}"; then
-        notify "Failed to push ${REPO_NAME} to ${dest_addr} with --mirror flag"
+    if [[ "${INPUT_PUSH_TAGS}" = "true" && ! "${INPUT_SKIP_TAGS_REPOS}" =~ ",${REPO_NAME}," ]]; then
+      if ! git push --tags -f "${dest_addr}"; then
+        notify "Failed to push tags: ${dest_addr}"
         if [[ "${INPUT_IGNORE_ERROR}" = "true" ]]; then
           continue
         fi

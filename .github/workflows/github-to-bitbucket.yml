@@ -24,7 +24,7 @@ jobs:
           echo "::set-output name=repo_list::${repo_list}"
 
       - name: GitHub to BitBucket
-        uses: k8scat/action-mirror-git@v0.1.1
+        uses: k8scat/action-mirror-git@v0.1.2
         with:
           source_protocol: https
           source_host: github.com
@@ -34,19 +34,12 @@ jobs:
           dest_host: bitbucket.org
           dest_username: k8scat
           dest_token: ${{ secrets.DEST_TOKEN_BITBUCKET }}
-          push_tags: "true"
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
           dest_create_repo_script: |
             curl \
               -u "${INPUT_DEST_USERNAME}:${INPUT_DEST_TOKEN}" \
               -H 'Content-Type: application/json' \
               -d '{"scm":"git"}' \
-              "https://api.bitbucket.org/2.0/repositories/${INPUT_DEST_USERNAME}/${REPO_NAME}"
-          force_push: "true"
-          dest_delete_repo_script: |
-            curl \
-              -X DELETE \
-              -u "${INPUT_DEST_USERNAME}:${INPUT_DEST_TOKEN}" \
               "https://api.bitbucket.org/2.0/repositories/${INPUT_DEST_USERNAME}/${REPO_NAME}"
           lark_webhook: ${{ secrets.LARK_WEBHOOK }}
           notify_prefix: "GitHub to BitBucket"

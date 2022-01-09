@@ -21,7 +21,6 @@ Synchronize git repositories like a mirror.
 - [x] Specify repositories without pushing tags
 - [x] Auto create repository on the dest git server with custom script
 - [x] Notify with Slack, DingTalk or Lark
-- [x] Force push if failed
 
 ### Any git server
 
@@ -63,8 +62,8 @@ dest_private_key: |
 ```yaml
 # Branch and commits will be synced by default
 
-# Sync tags
-push_tags: "true"
+# Sync tags by default, if you only want to sync branches, you can set push_tags to false
+push_tags: "false"
 ```
 
 Refer to [Duplicating a repository](https://docs.github.com/cn/repositories/creating-and-managing-repositories/duplicating-a-repository).
@@ -117,20 +116,6 @@ dingtalk_webhook: ${{ secrets.DINGTALK_WEBHOOK }}
 lark_webhook: ${{ secrets.LARK_WEBHOOK }}
 ```
 
-### Force push
-
-**Force push will delete the existed repository on the dest git server when push failed, then push again.**
-
-```yaml
-force_push: "true"
-dest_delete_repo_script: |
-  if ! gh auth status; then
-    echo "${INPUT_DEST_TOKEN}" | gh auth login --with-token
-    gh auth status
-  fi
-  gh repo delete "${INPUT_DEST_USERNAME}/${REPO_NAME}" --confirm
-```
-
 ## Run
 
 ```bash
@@ -156,10 +141,9 @@ docker run \
   -e INPUT_SLACK_WEBHOOK \
   -e INPUT_DINGTALK_WEBHOOK \
   -e INPUT_LARK_WEBHOOK="xxx" \
-  -e INPUT_FORCE_PUSH="false" \
   -e INPUT_NOTIFY_PREFIX="Mirror Git" \
   -e INPUT_NOTIFY_SUFFIX="Powered by https://github.com/k8scat/action-mirror-git" \
-  gigrator/mirror-git:0.1.1
+  gigrator/mirror-git:0.1.2
 ```
 
 ## LICENSE

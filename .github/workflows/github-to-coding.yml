@@ -26,7 +26,7 @@ jobs:
           echo "::set-output name=repo_list::${repo_list}"
 
       - name: GitHub to Coding
-        uses: k8scat/action-mirror-git@v0.1.1
+        uses: k8scat/action-mirror-git@v0.1.2
         with:
           source_protocol: https
           source_host: github.com
@@ -37,25 +37,12 @@ jobs:
           dest_username: ${{ secrets.CODING_PROJECT_NAME }}
           dest_token: ${{ secrets.DEST_TOKEN_CODING }}
           dest_token_username: k8scat
-          push_tags: "true"
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
           dest_create_repo_script: |
             curl \
               -H 'Content-Type: application/json' \
               -d "{\"Action\":\"CreateGitDepot\",\"ProjectId\":${{ secrets.CODING_PROJECT_ID }},\"DepotName\":\"${REPO_NAME}\"}" \
               https://e.coding.net/open-api
-          force_push: "true"
-          dest_delete_repo_script: |
-            depot_id=$(curl \
-              -H 'Content-Type: application/json' \
-              -H 'Authorization: token ${INPUT_DEST_TOKEN}' \
-              -d "{"Action":"DescribeProjectDepotInfoList","ProjectId": 9853957}" \
-              'https://e.coding.net/open-api' | \
-              jq ".Response | .DepotData | .Depots | .[] | select(.Name == \"${REPO_NAME}\") | .Id")
-            curl \
-              -H 'Content-Type: application/json' \
-              -d "{\"Action\":\"DeleteGitDepot\",\"DepotId\":${depot_id}}' \
-              'https://e.coding.net/open-api'
           lark_webhook: ${{ secrets.LARK_WEBHOOK }}
           notify_prefix: "GitHub to Coding"
           ignore_error: "true"

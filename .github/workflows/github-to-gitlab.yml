@@ -35,7 +35,7 @@ jobs:
           echo "::set-output name=repo_list::${repo_list}"
 
       - name: GitHub to GitLab
-        uses: k8scat/action-mirror-git@v0.1.1
+        uses: k8scat/action-mirror-git@v0.1.2
         with:
           source_protocol: https
           source_host: github.com
@@ -45,8 +45,16 @@ jobs:
           dest_host: gitlab.com
           dest_username: k8scat
           dest_token: ${{ secrets.DEST_TOKEN_GITLAB }}
-          push_tags: "true"
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
           lark_webhook: ${{ secrets.LARK_WEBHOOK }}
           notify_prefix: "GitHub to GitLab"
           ignore_error: "true"
+          dest_create_repo_script: |
+            result=$(gitlab_update_project ${INPUT_DEST_TOKEN} $(urlencode ${INPUT_DEST_USERNAME}/${REPO_NAME}) "{\"lfs_enabled\":false}")
+            if [[ "${result}" = "404" ]]; then
+              result=$(gitlab_create_project ${INPUT_DEST_TOKEN} "{\"name\":\"${REPO_NAME}\",\"lfs_enabled\":false}")
+              if [[ "${result}" != "201" ]]; then
+                notify "Failed to create gitlab project: ${REPO_NAME}"
+                exit 1
+              fi
+            fi

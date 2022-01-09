@@ -24,7 +24,7 @@ jobs:
           echo "::set-output name=repo_list::${repo_list}"
 
       - name: GitHub Org to Gitee Org
-        uses: k8scat/action-mirror-git@v0.1.1
+        uses: k8scat/action-mirror-git@v0.1.2
         with:
           source_protocol: https
           source_host: github.com
@@ -35,19 +35,12 @@ jobs:
           dest_username: huayin-opensource
           dest_token: ${{ secrets.DEST_TOKEN_GITEE }}
           dest_token_username: k8scat
-          push_tags: "true"
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
           dest_create_repo_script: |
             curl \
               -H 'Content-Type: application/json;charset=UTF-8' \
               -d "{\"access_token\":\"${INPUT_DEST_TOKEN}\",\"name\":\"${REPO_NAME}\",\"private\":\"true\"}" \
               "https://gitee.com/api/v5/orgs/${INPUT_DEST_USERNAME}/repos"
-          dest_delete_repo_script: |
-            curl \
-              -X DELETE \
-              -H 'Content-Type: application/json;charset=UTF-8' \
-              "https://gitee.com/api/v5/repos/${INPUT_DEST_USERNAME}/${REPO_NAME}?access_token=${INPUT_DEST_TOKEN}"
           lark_webhook: ${{ secrets.LARK_WEBHOOK }}
           notify_prefix: "GitHub Org to Gitee Org"
-          force_push: "true"
           ignore_error: "true"

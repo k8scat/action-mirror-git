@@ -24,7 +24,7 @@ jobs:
           echo "::set-output name=repo_list::${repo_list}"
 
       - name: GitHub to GitHub
-        uses: k8scat/action-mirror-git@v0.1.1
+        uses: k8scat/action-mirror-git@v0.1.2
         with:
           source_protocol: https
           source_host: github.com
@@ -35,7 +35,6 @@ jobs:
           dest_username: k8scat-archived
           dest_token: ${{ secrets.DEST_TOKEN_GITHUB }}
           dest_token_username: gitobor
-          push_tags: "true"
           mirror_repos: ${{ steps.list_repos.outputs.repo_list }}
           dest_create_repo_script: |
             if ! gh auth status; then
@@ -45,17 +44,10 @@ jobs:
 
             found=$(gh repo list ${INPUT_DEST_USERNAME} -L 1000 --json name -t "{{range .}}{{if (eq .name \"${REPO_NAME}\")}}{{.name}}{{end}}{{end}}")
             if [[ -n "${found}" ]]; then
-              echo "repo ${REPO_NAME} already exists"
+              echo "Repo already exists: ${REPO_NAME}"
               exit 0
             fi
             gh repo create "${INPUT_DEST_USERNAME}/${REPO_NAME}" --private
-          force_push: "true"
-          dest_delete_repo_script: |
-            if ! gh auth status; then
-              echo "${INPUT_DEST_TOKEN}" | gh auth login --with-token
-              gh auth status
-            fi
-            gh repo delete "${INPUT_DEST_USERNAME}/${REPO_NAME}" --confirm
           lark_webhook: ${{ secrets.LARK_WEBHOOK }}
           notify_prefix: "GitHub to GitHub"
           ignore_error: "true"

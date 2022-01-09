@@ -61,14 +61,14 @@ inputs:
     description: "Repos to mirror, separated by comma"
     required: true
   push_tags:
-    description: "Push tags via --mirror, true or false"
+    description: "Push tags, true or false"
     required: false
     default: "true"
   skip_tags_repos:
-    description: "Skip pushing tags for these repos, seperated by comma"
+    description: "Skip pushing tags for these repos, surrounded by comma"
     required: false
   ignored_repos:
-    description: "Ignore these repos, seperated by comma"
+    description: "Ignore these repos, surrounded by comma"
     required: false
   slack_webhook:
     description: "Slack webhook url"
@@ -78,13 +78,6 @@ inputs:
     required: false
   lark_webhook:
     description: "Lark webhook url"
-    required: false
-  force_push:
-    description: "Recreate repo if push failed, true or false"
-    required: false
-    default: "false"
-  dest_delete_repo_script:
-    description: "Script used to delete repo on dest git server"
     required: false
   notify_prefix:
     description: "Prefix for notify message"
@@ -100,4 +93,4 @@ inputs:
     default: "false"
 runs:
   using: "docker"
-  image: "docker://ghcr.io/k8scat/mirror-git:0.1.1"
+  image: "docker://ghcr.io/k8scat/mirror-git:0.1.2"
