@@ -2,6 +2,9 @@
 # Created by K8sCat <k8scat@gmail.com>
 set +e
 
+PROTOCOL_SSH="ssh"
+PROTOCOL_HTTPS="https"
+
 function init_workdir() {
   WORKDIR="/data/repos"
   mkdir -p ${WORKDIR}
@@ -125,23 +128,23 @@ function init_ssh() {
   mkdir -p "${SSH_DIR}"
   chmod 0700 "${SSH_DIR}"
 
-  if [[ "${INPUT_SOURCE_PROTOCOL}" = "ssh" ]]; then
+  if [[ "${INPUT_SOURCE_PROTOCOL}" = "${PROTOCOL_SSH}" ]]; then
     INPUT_SOURCE_HOST=$(write_ssh_config "source" "${INPUT_SOURCE_HOST}" "${INPUT_SOURCE_PORT}" "${INPUT_SOURCE_USERNAME}" "${INPUT_SOURCE_PRIVATE_KEY}")
     export INPUT_SOURCE_HOST
   fi
-  if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
+  if [[ "${INPUT_DEST_PROTOCOL}" = "${PROTOCOL_SSH}" ]]; then
     INPUT_DEST_HOST=$(write_ssh_config "dest" "${INPUT_DEST_HOST}" "${INPUT_DEST_PORT}" "${INPUT_DEST_USERNAME}" "${INPUT_DEST_PRIVATE_KEY}")
     export INPUT_DEST_HOST
   fi
 }
 
 function gen_source_addr() {
-  if [[ "${INPUT_SOURCE_PROTOCOL}" = "ssh" ]]; then
+  if [[ "${INPUT_SOURCE_PROTOCOL}" = "${PROTOCOL_SSH}" ]]; then
     source_addr="git@${INPUT_SOURCE_HOST}:${INPUT_SOURCE_USERNAME}/${REPO_NAME}.git"
     echo "${source_addr}"
     return
   fi
-  if [[ "${INPUT_SOURCE_PROTOCOL}" = "https" ]]; then
+  if [[ "${INPUT_SOURCE_PROTOCOL}" = "${PROTOCOL_HTTPS}" ]]; then
     source_addr="https://${INPUT_SOURCE_TOKEN_USERNAME}:${INPUT_SOURCE_TOKEN}@${INPUT_SOURCE_HOST}"
     if [[ -n "${INPUT_SOURCE_PORT}" ]]; then
       source_addr="${source_addr}:${INPUT_SOURCE_PORT}"
@@ -155,12 +158,12 @@ function gen_source_addr() {
 }
 
 function gen_dest_addr() {
-  if [[ "${INPUT_DEST_PROTOCOL}" = "ssh" ]]; then
+  if [[ "${INPUT_DEST_PROTOCOL}" = "${PROTOCOL_SSH}" ]]; then
     dest_addr="git@${INPUT_DEST_HOST}:${INPUT_DEST_USERNAME}/${REPO_NAME}.git"
     echo "${dest_addr}"
     return
   fi
-  if [[ "${INPUT_DEST_PROTOCOL}" = "https" ]]; then
+  if [[ "${INPUT_DEST_PROTOCOL}" = "${PROTOCOL_HTTPS}" ]]; then
     dest_addr="https://${INPUT_DEST_TOKEN_USERNAME}:${INPUT_DEST_TOKEN}@${INPUT_DEST_HOST}"
     if [[ -n "${INPUT_DEST_PORT}" ]]; then
       dest_addr="${dest_addr}:${INPUT_DEST_PORT}"
@@ -246,7 +249,7 @@ function main() {
   init_message
   init_ssh
 
-  notify "Mirror Git starting"
+  notify "Mirror Git started"
   if mirror; then
     notify "Mirror Git finished"
   else

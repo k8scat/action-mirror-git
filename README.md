@@ -143,7 +143,7 @@ docker run \
   -e INPUT_LARK_WEBHOOK="xxx" \
   -e INPUT_NOTIFY_PREFIX="Mirror Git" \
   -e INPUT_NOTIFY_SUFFIX="Powered by https://github.com/k8scat/action-mirror-git" \
-  gigrator/mirror-git:0.1.2
+  gigrator/mirror-git:0.1.3
 ```
 
 ## LICENSE

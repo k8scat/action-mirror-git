@@ -93,4 +93,4 @@ inputs:
     default: "false"
 runs:
   using: "docker"
-  image: "docker://ghcr.io/k8scat/mirror-git:0.1.2"
+  image: "docker://ghcr.io/k8scat/mirror-git:0.1.3"

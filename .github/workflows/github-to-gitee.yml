@@ -14,7 +14,7 @@ jobs:
       - name: Login Source GitHub
         run: |
           gh --version
-          echo "${{ secrets.SOURCE_TOKEN }}" | gh auth login --with-token
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
           gh auth status
 
       - name: List repos
@@ -24,12 +24,12 @@ jobs:
           echo "::set-output name=repo_list::${repo_list}"
 
       - name: GitHub to Gitee
-        uses: k8scat/action-mirror-git@v0.1.2
+        uses: k8scat/action-mirror-git@v0.1.3
         with:
           source_protocol: https
           source_host: github.com
           source_username: k8scat
-          source_token: ${{ secrets.SOURCE_TOKEN }}
+          source_token: ${{ secrets.GITHUB_TOKEN }}
           dest_protocol: https
           dest_host: gitee.com
           dest_username: k8scat
